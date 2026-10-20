@@ -80,7 +80,7 @@ class SpeakerCard extends HTMLElement {
       .entry{flex:1;min-width:0;height:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;border:0;background:none;text-align:left}
       .art{width:36px;height:36px;flex:none;color:var(--secondary-text-color);display:grid;place-items:center}
       .art>ha-icon.playing,.pair .playing{color:var(--primary-color)}
-      .art>ha-icon{--mdc-icon-size:32px}.pair{display:block;width:36px;height:36px;position:relative}
+      .art>ha-icon{--mdc-icon-size:28px}.pair{display:block;width:36px;height:36px;position:relative;transform:scale(.85)}
       .pair i{position:absolute;width:25px;height:30px;background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
       .pair i:first-of-type{left:-2px;top:0;opacity:.55}.pair i:nth-of-type(2){right:-2px;bottom:0}
       .theater ha-icon{position:absolute;top:-3px;left:4px;--mdc-icon-size:28px}
@@ -100,9 +100,9 @@ class SpeakerCard extends HTMLElement {
       output{grid-column:3;grid-row:1;font-size:12px;text-align:center}
       .speakers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border-top:1px solid var(--divider-color,#ddd);padding-top:16px}
       .speaker{border:0;background:none;text-align:center;padding:14px 4px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}.speaker span{display:block;font-size:13px;overflow-wrap:anywhere}.speaker small{display:block;color:var(--secondary-text-color)}
-      .speaker-art{display:block;width:48px;height:48px;margin-bottom:4px;color:var(--secondary-text-color)}
+      .speaker-art{display:block;width:40px;height:40px;margin-bottom:4px;color:var(--secondary-text-color)}
       .speaker-art.homepod{background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
-      .speaker-art ha-icon{--mdc-icon-size:48px}.speaker.playing .speaker-art{color:var(--primary-color)}.speaker.unavailable .speaker-art{opacity:.4}
+      .speaker-art ha-icon{--mdc-icon-size:40px}.speaker.playing .speaker-art{color:var(--primary-color)}.speaker.unavailable .speaker-art{opacity:.4}
       .unavailable small{color:var(--error-color,#db4437)}.error{color:var(--error-color,#db4437);font-size:13px;overflow-wrap:anywhere}.error:empty{display:none}
       .details{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}[hidden]{display:none!important}
     </style>
