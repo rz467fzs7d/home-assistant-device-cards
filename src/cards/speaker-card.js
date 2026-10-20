@@ -10,6 +10,8 @@ const TYPES = {
 };
 const available = state => state && !["unknown", "unavailable"].includes(state.state);
 const active = state => ["playing", "buffering"].includes(state?.state);
+const resumable = state => state?.state === "paused" ||
+  (state?.state === "idle" && Boolean(state.attributes?.media_title));
 const displayActive = state => Boolean(state?.state && available(state) && !["off", "standby"].includes(state.state));
 const stateLabel = state => (state?.state || "unavailable").replaceAll("_", " ").replace(/\b[a-z]/g, letter => letter.toUpperCase());
 const mediaEntity = id => typeof id === "string" && /^media_player\.[a-z0-9_]+$/.test(id);
@@ -63,10 +65,10 @@ class SpeakerCard extends HTMLElement {
   resolvePlayback() {
     const ids = [this.config.entity, ...(this.config.playback_entities || [])];
     const states = this._hass.states;
-    // Retain a paused source so its Play button resumes that same session.
+    // MA AirPlay groups can report idle with retained media after Pause.
     this._playbackId = ids.find(id => active(states[id])) ||
-      (ids.includes(this.playbackId) && states[this.playbackId]?.state === "paused" ? this.playbackId : null) ||
-      ids.find(id => states[id]?.state === "paused") || this.config.entity;
+      (ids.includes(this.playbackId) && resumable(states[this.playbackId]) ? this.playbackId : null) ||
+      ids.find(id => resumable(states[id])) || this.config.entity;
   }
   speakerState(index) {
     const native = this._hass?.states[this.config.speakers[index]];
@@ -191,8 +193,8 @@ class SpeakerCard extends HTMLElement {
     const volume = this.volume?.attributes?.volume_level;
     root.querySelectorAll(".summary").forEach(el => { el.textContent =
       `${stateLabel(state)}${typeof volume === "number" ? ` · ${Math.round(volume * 100)}%` : ""}${missing ? ` · ${missing} Unavailable` : ""}`; });
-    root.querySelectorAll(".media").forEach(el => { el.textContent = ["playing", "paused", "buffering"].includes(state?.state) ? attrs.media_title || "" : ""; });
-    root.querySelector(".artist").textContent = ["playing", "paused", "buffering"].includes(state?.state) ? attrs.media_artist || attrs.app_name || "" : "";
+    root.querySelectorAll(".media").forEach(el => { el.textContent = active(state) || resumable(state) ? attrs.media_title || "" : ""; });
+    root.querySelector(".artist").textContent = active(state) || resumable(state) ? attrs.media_artist || attrs.app_name || "" : "";
     if (groupActive && !active(state)) {
       root.querySelector(".tile .summary").textContent = `On${missing ? ` · ${missing} Unavailable` : ""}`;
     }

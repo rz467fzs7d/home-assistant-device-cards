@@ -33,7 +33,8 @@ By default this is the configured `entity`, with an optional `volume_entity`.
 To follow other sources, set `playback_entities` to an ordered list of additional
 controllable HA media players (for example a Music Assistant room and native HomePods).
 The first playing/buffering source wins, with the primary checked first.
-A paused source is retained for resume; otherwise the first paused source is used,
+A paused source (or MA's idle state with retained media) is retained for resume;
+otherwise the first resumable source is used,
 falling back to the primary. Alternate sources use their own volume control;
 `volume_entity` applies only to the primary. The dialog identifies the selected player.
 Controls remain limited by what the selected HA integration actually supports;

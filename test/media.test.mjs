@@ -125,6 +125,10 @@ test("playback controls follow MA, retain paused source and return to Apple TV",
   card._hass.states["media_player.ma_room"].state = "paused";
   card.update();
   await card.command("media_play");
+  card._hass.states["media_player.ma_room"].state = "idle";
+  card.update();
+  assert.equal(card.playbackId, "media_player.ma_room");
+  assert.equal(card.shadowRoot.querySelector(".now .media").textContent, "Music");
   await card.command("volume_set", { volume_level: .12 });
   assert.deepEqual(calls.map(c => c[2].entity_id), Array(3).fill("media_player.ma_room"));
   card._hass.states["media_player.main"].state = "playing";
