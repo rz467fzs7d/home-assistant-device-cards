@@ -1,0 +1,15 @@
+{
+  "name": "home-assistant-device-cards",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "happy-dom": "^20.0.0"
+  }
+}
