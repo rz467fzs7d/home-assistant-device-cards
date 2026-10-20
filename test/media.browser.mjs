@@ -38,6 +38,8 @@ try {
         const p = pair.getBoundingClientRect();
         return Math.abs(a.width - b.width) < .01 && Math.abs(a.height - b.height) < .01 &&
           Math.abs(a.y - b.y) < .01 && Math.abs(a.x - p.x - (p.right - b.right)) < .01 &&
+          Number.isInteger(a.width) && Number.isInteger(a.height) &&
+          Math.abs((b.x - a.x) - Math.round(b.x - a.x)) < .01 &&
           getComputedStyle(left).opacity === getComputedStyle(right).opacity;
       }));
     assert.ok(symmetric, "left/right artwork must have equal size, height, opacity and symmetric offsets");

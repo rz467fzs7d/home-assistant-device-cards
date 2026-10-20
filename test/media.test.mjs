@@ -93,6 +93,19 @@ test("theater Apple TV icon opens the configured Apple TV, not the active music 
   const stereo = setup().card;
   assert.ok(stereo.shadowRoot.querySelector('.details [aria-label="Player Details"]'));
 });
+test("tiles show state when not playing and never show internal AirPlay identifiers", () => {
+  const { card } = setup();
+  for (const state of ["paused", "idle", "off"]) {
+    card._hass.states["media_player.main"].state = state;
+    card.update();
+    assert.equal(card.shadowRoot.querySelector(".tile .media").textContent, "");
+  }
+  card._hass.states["media_player.main"].state = "playing";
+  card._hass.states["media_player.main"].attributes.media_title = "com.apple.tvairplayd";
+  card.update();
+  assert.equal(card.shadowRoot.querySelector(".tile .media").textContent, "");
+  assert.equal(card.shadowRoot.querySelector(".now .media").textContent, "");
+});
 
 test("playing audio or an enabled display activates the group; paused audio stays gray", () => {
   const { card } = setup("apple-theater-card", {

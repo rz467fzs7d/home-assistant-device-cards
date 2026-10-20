@@ -11,6 +11,10 @@ const TYPES = {
 };
 const available = state => state && !["unknown", "unavailable"].includes(state.state);
 const active = state => ["playing", "buffering"].includes(state?.state);
+const mediaTitle = state => {
+  const title = state?.attributes?.media_title || "";
+  return /^com\.apple\./i.test(title) ? "" : title;
+};
 const resumable = state => state?.state === "paused" ||
   (state?.state === "idle" && Boolean(state.attributes?.media_title));
 const displayActive = state => Boolean(state?.state && available(state) && !["off", "standby"].includes(state.state));
@@ -103,12 +107,12 @@ class SpeakerCard extends HTMLElement {
       .entry{flex:1;min-width:0;height:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;border:0;background:none;text-align:left}
       .art{width:36px;height:36px;flex:none;color:var(--state-media_player-inactive-color,var(--state-inactive-color,var(--secondary-text-color)));display:grid;place-items:center}
       .art.active{color:var(--state-media_player-active-color,var(--state-active-color,var(--primary-color)))}
-      .art>ha-icon{--mdc-icon-size:28px}.pair{display:block;width:36px;height:36px;position:relative;transform:scale(.85)}
-      .pair i{position:absolute;width:18px;height:30px;background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
-      .pair i:first-of-type{left:-1px;top:3px}.pair i:nth-of-type(2){right:-1px;top:3px}
-      .theater ha-icon{position:absolute;top:-3px;left:4px;--mdc-icon-size:28px}
-      .theater i{width:21px;height:25px}.theater i:first-of-type{top:12px;left:-5px}.theater i:nth-of-type(2){top:12px;right:-5px}
-      .theater i:nth-of-type(3){top:0;left:-6px}.theater i:nth-of-type(4){top:0;right:-6px}
+      .art>ha-icon{--mdc-icon-size:28px}.pair{display:block;width:32px;height:32px;position:relative}
+      .pair i{position:absolute;width:14px;height:24px;background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
+      .pair i:first-of-type{left:0;top:4px}.pair i:nth-of-type(2){right:0;top:4px}
+      .theater ha-icon{position:absolute;top:0;left:4px;--mdc-icon-size:24px}
+      .theater i{width:16px;height:20px}.theater i:first-of-type{top:12px;left:-2px}.theater i:nth-of-type(2){top:12px;right:-2px}
+      .theater i:nth-of-type(3){top:0;left:-2px}.theater i:nth-of-type(4){top:0;right:-2px}
       .text{min-width:0}.name{font-size:14px;font-weight:500}.summary,.media{font-size:12px;color:var(--secondary-text-color);margin-top:3px}
       .text>*{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.text .media:empty{display:none}
       .tile .media:not(:empty)+.summary{display:none}
@@ -197,8 +201,10 @@ class SpeakerCard extends HTMLElement {
     const volume = this.volume?.attributes?.volume_level;
     root.querySelectorAll(".summary").forEach(el => { el.textContent =
       `${stateLabel(state)}${typeof volume === "number" ? ` · ${Math.round(volume * 100)}%` : ""}${missing ? ` · ${missing} Unavailable` : ""}`; });
-    root.querySelectorAll(".media").forEach(el => { el.textContent = active(state) || resumable(state) ? attrs.media_title || "" : ""; });
-    root.querySelector(".artist").textContent = active(state) || resumable(state) ? attrs.media_artist || attrs.app_name || "" : "";
+    root.querySelector(".tile .media").textContent = active(state) ? mediaTitle(state) : "";
+    root.querySelector(".now .media").textContent = active(state) || resumable(state) ? mediaTitle(state) : "";
+    root.querySelector(".artist").textContent = (active(state) || resumable(state)) && mediaTitle(state)
+      ? attrs.media_artist || attrs.app_name || "" : "";
     if (groupActive && !active(state)) {
       root.querySelector(".tile .summary").textContent = `On${missing ? ` · ${missing} Unavailable` : ""}`;
     }
