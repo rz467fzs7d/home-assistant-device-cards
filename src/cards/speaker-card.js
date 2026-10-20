@@ -92,8 +92,8 @@ class SpeakerCard extends HTMLElement {
   iconMarkup() {
     const type = this.constructor.cardType;
     if (type === "general-speaker-stereo-card") return '<ha-icon icon="mdi:speaker-multiple"></ha-icon>';
-    return `<span class="pair ${type === "apple-theater-card" ? "theater" : ""}" aria-hidden="true">
-      ${type === "apple-theater-card" ? '<ha-icon icon="mdi:television"></ha-icon>' : ""}
+    return `<span class="pair ${type === "apple-theater-card" ? `theater slots-${this.config.speakers.length}` : ""}" aria-hidden="true">
+      ${type === "apple-theater-card" ? '<span class="theater-box"><span class="apple-tv-icon"></span></span>' : ""}
       <i></i><i></i>${this.config.speakers.length === 4 ? "<i></i><i></i>" : ""}</span>`;
   }
   render() {
@@ -110,9 +110,11 @@ class SpeakerCard extends HTMLElement {
       .art>ha-icon{--mdc-icon-size:28px}.pair{display:block;width:32px;height:32px;position:relative}
       .pair i{position:absolute;width:14px;height:24px;background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
       .pair i:first-of-type{left:0;top:4px}.pair i:nth-of-type(2){right:0;top:4px}
-      .theater ha-icon{position:absolute;top:0;left:4px;--mdc-icon-size:24px}
-      .theater i{width:16px;height:20px}.theater i:first-of-type{top:12px;left:-2px}.theater i:nth-of-type(2){top:12px;right:-2px}
-      .theater i:nth-of-type(3){top:0;left:-2px}.theater i:nth-of-type(4){top:0;right:-2px}
+      .theater i{width:16px;height:22px;opacity:.65}
+      .theater i:first-of-type{top:0;left:-2px}.theater i:nth-of-type(2){top:0;right:-2px}
+      .theater i:nth-of-type(3){top:10px;left:-2px}.theater i:nth-of-type(4){top:10px;right:-2px}
+      .theater-box{position:absolute;z-index:1;left:6px;top:12px;width:20px;height:20px;border-radius:5px;background:currentColor;box-shadow:0 0 0 1.5px var(--ha-card-background,var(--card-background-color,#fff));display:grid;place-items:center}
+      .theater-box .apple-tv-icon{width:17px;height:17px;background:var(--ha-card-background,var(--card-background-color,#fff))}
       .text{min-width:0}.name{font-size:14px;font-weight:500}.summary,.media{font-size:12px;color:var(--secondary-text-color);margin-top:3px}
       .text>*{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.text .media:empty{display:none}
       .tile .media:not(:empty)+.summary{display:none}

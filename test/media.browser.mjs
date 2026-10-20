@@ -74,6 +74,20 @@ try {
     assert.equal(await page.evaluate(() => window.calls[0][2].entity_id), "media_player.main");
     await page.keyboard.press("Escape");
     assert.equal(await page.locator("apple-theater-card dialog").evaluate(el => el.open), false);
+    for (const model of ["homepod", "mini"]) {
+      await page.evaluate(model => {
+        const card = document.querySelector("apple-theater-card");
+        card.setConfig({ ...card.config, model, speakers: ["media_player.speaker_0", "media_player.speaker_1"] });
+      }, model);
+      assert.equal(await page.locator("apple-theater-card .tile .theater i").count(), 2);
+      assert.equal(await page.locator("apple-theater-card .tile .theater-box .apple-tv-icon").count(), 1);
+      const pods = await page.locator("apple-theater-card .tile .theater i").evaluateAll(items => items.map(el => {
+        const r = el.getBoundingClientRect();
+        return { width: r.width, height: r.height, top: r.top };
+      }));
+      assert.deepEqual(pods[0], pods[1], "paired HomePods have identical dimensions and alignment");
+      await page.locator("apple-theater-card").screenshot({ path: `test-results/theater-${model}-pair-${width}.png` });
+    }
     assert.deepEqual(errors, []);
     await page.close();
   }
