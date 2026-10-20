@@ -24,6 +24,11 @@ test("counts, unavailable and embedded icon", () => {
   assert.equal(card.shadowRoot.querySelectorAll(".outlet")[2].disabled, true);
   assert.match(card.shadowRoot.querySelector("style").textContent, /data:image\/svg\+xml/);
   assert.ok(!bundle.includes("/local/powerstrip.svg"));
+  const css = card.shadowRoot.querySelector("style").textContent;
+  const iconUrl = css.match(/mask:url\("([^"]+)"\)/)?.[1];
+  assert.ok(iconUrl, "SVG URL must not contain unescaped CSS string quotes");
+  assert.match(decodeURIComponent(iconUrl.split(",")[1]), /<svg/);
+  assert.match(decodeURIComponent(iconUrl.split(",")[1]), /<\/svg>/);
 });
 test("individual controls, service errors, confirmation and duplicate protection", async () => {
   const { window, card, calls } = setup();

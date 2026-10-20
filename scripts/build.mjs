@@ -7,7 +7,7 @@ await build({
   bundle: true,
   format: "esm",
   target: "es2022",
-  loader: { ".svg": "dataurl" },
+  loader: { ".svg": "text" },
   define: { __VERSION__: JSON.stringify(version) },
   banner: { js: `/* Home Assistant Device Cards ${version} | MIT | Powerstrip artwork: SVG Repo, CC0 */` }
 });

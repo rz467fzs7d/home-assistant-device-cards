@@ -1,4 +1,6 @@
-import powerStripIcon from "../assets/powerstrip.svg";
+import powerStripSvg from "../assets/powerstrip.svg";
+
+const powerStripIcon = `data:image/svg+xml,${encodeURIComponent(powerStripSvg)}`;
 
 /* Compact entry with independent outlet controls. No aggregate switching. */
 class PowerStripCard extends HTMLElement {
