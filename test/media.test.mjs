@@ -67,6 +67,8 @@ test("editor exposes filtered entity selectors and theater layout", () => {
   const editor = card.constructor.getConfigElement();
   editor.setConfig(card.config);
   editor.hass = card._hass;
+  assert.equal(card.shadowRoot.querySelector(".speaker span").textContent, "Left");
+  assert.equal(editor.shadowRoot.querySelector(".channels ha-selector").label, "Left");
   let config;
   editor.addEventListener("config-changed", e => { config = e.detail.config; });
   const selector = editor.shadowRoot.querySelector("ha-selector");
@@ -77,4 +79,5 @@ test("editor exposes filtered entity selectors and theater layout", () => {
   layout.value = "4";
   layout.dispatchEvent(new window.Event("change"));
   assert.equal(config.speakers.length, 4);
+  assert.equal(editor.shadowRoot.querySelector(".channels ha-selector").label, "Front left");
 });

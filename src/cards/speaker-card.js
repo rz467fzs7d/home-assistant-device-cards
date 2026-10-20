@@ -117,7 +117,7 @@ class SpeakerCard extends HTMLElement {
     const slider = root.querySelector("input");
     slider.oninput = () => { root.querySelector("output").textContent = `${slider.value}%`; };
     slider.onchange = () => this.command("volume_set", { volume_level: Number(slider.value) / 100 });
-    const positions = this.constructor.cardType === "apple-theater-card"
+    const positions = this.config.speakers.length === 4
       ? ["Front left", "Front right", "Rear left", "Rear right"] : ["Left", "Right"];
     this.config.speakers.forEach((id, index) => {
       const button = document.createElement("button");

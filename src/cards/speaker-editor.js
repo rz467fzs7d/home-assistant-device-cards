@@ -54,7 +54,7 @@ class SpeakerEditor extends HTMLElement {
       model => this.emit({ model })));
     if (theater || general) {
       root.append(this.selectField("Speaker layout", "layout",
-        theater ? [["2", "Front pair"], ["4", "Front and rear pairs"]] : [["0", "Single stereo entity"], ["2", "Left and right entities"]],
+        theater ? [["2", "Stereo pair"], ["4", "Front and rear pairs"]] : [["0", "Single stereo entity"], ["2", "Left and right entities"]],
         String(this.config.speakers.length || (theater ? 2 : 0)), value => {
           this.emit({ speakers: Array.from({ length: Number(value) }, (_, i) => this.config.speakers[i] || "") });
           this.render();
@@ -62,7 +62,7 @@ class SpeakerEditor extends HTMLElement {
     }
     const channels = document.createElement("div"); channels.className = "channels";
     const count = theater ? (this.config.speakers.length === 4 ? 4 : 2) : general ? this.config.speakers.length : 2;
-    const positions = theater ? ["Front left", "Front right", "Rear left", "Rear right"] : ["Left", "Right"];
+    const positions = count === 4 ? ["Front left", "Front right", "Rear left", "Rear right"] : ["Left", "Right"];
     for (let i = 0; i < count; i++) {
       channels.append(this.entityField(positions[i], this.config.speakers[i], value => {
         const speakers = Array.from({ length: count }, (_, j) => this.config.speakers[j] || "");
