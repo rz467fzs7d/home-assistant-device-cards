@@ -83,7 +83,7 @@ test("editor exposes filtered entity selectors and theater layout", () => {
   assert.equal(editor.shadowRoot.querySelector(".channels ha-selector").label, "Front left");
 });
 
-test("any enabled member activates the group; member states remain independent", () => {
+test("playing audio or an enabled display activates the group; paused audio stays gray", () => {
   const { card } = setup("apple-theater-card", {
     television: "media_player.tv",
     speaker_state_entities: ["media_player.ma_left", "media_player.ma_right"]
@@ -91,14 +91,14 @@ test("any enabled member activates the group; member states remain independent",
   card._hass.states["media_player.main"].state = "off";
   card._hass.states["media_player.ma_right"] = { state: "standby" };
   const art = card.shadowRoot.querySelector(".tile .art");
-  for (const state of ["on", "idle", "paused", "buffering", "playing"]) {
+  for (const state of ["buffering", "playing"]) {
     card._hass.states["media_player.ma_left"] = { state };
     card.update();
     assert.equal(art.classList.contains("active"), true, state);
     assert.equal(card.shadowRoot.querySelectorAll(".speaker.active").length, 1);
     assert.match(card.shadowRoot.querySelector(".tile .summary").textContent, /^On/);
   }
-  for (const state of ["off", "standby", "unknown", "unavailable"]) {
+  for (const state of ["on", "idle", "paused", "off", "standby", "unknown", "unavailable"]) {
     card._hass.states["media_player.ma_left"] = { state };
     card.update();
     assert.equal(art.classList.contains("active"), false, state);

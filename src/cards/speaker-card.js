@@ -9,8 +9,8 @@ const TYPES = {
   "general-speaker-stereo-card": "Speaker Stereo"
 };
 const available = state => state && !["unknown", "unavailable"].includes(state.state);
-// Match HA's media-player active-state semantics, including idle and paused.
-const active = state => Boolean(state?.state && available(state) && !["off", "standby"].includes(state.state));
+const active = state => ["playing", "buffering"].includes(state?.state);
+const displayActive = state => Boolean(state?.state && available(state) && !["off", "standby"].includes(state.state));
 const stateLabel = state => (state?.state || "unavailable").replaceAll("_", " ").replace(/\b[a-z]/g, letter => letter.toUpperCase());
 const mediaEntity = id => typeof id === "string" && /^media_player\.[a-z0-9_]+$/.test(id);
 
@@ -83,11 +83,11 @@ class SpeakerCard extends HTMLElement {
       .art{width:36px;height:36px;flex:none;color:var(--state-media_player-inactive-color,var(--state-inactive-color,var(--secondary-text-color)));display:grid;place-items:center}
       .art.active{color:var(--state-media_player-active-color,var(--state-active-color,var(--primary-color)))}
       .art>ha-icon{--mdc-icon-size:28px}.pair{display:block;width:36px;height:36px;position:relative;transform:scale(.85)}
-      .pair i{position:absolute;width:25px;height:30px;background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
-      .pair i:first-of-type{left:-2px;top:0;opacity:.55}.pair i:nth-of-type(2){right:-2px;bottom:0}
+      .pair i{position:absolute;width:18px;height:30px;background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
+      .pair i:first-of-type{left:-1px;top:3px}.pair i:nth-of-type(2){right:-1px;top:3px}
       .theater ha-icon{position:absolute;top:-3px;left:4px;--mdc-icon-size:28px}
-      .theater i{width:21px;height:25px}.theater i:first-of-type{top:12px;left:-5px;opacity:1}.theater i:nth-of-type(2){bottom:-1px;right:-5px}
-      .theater i:nth-of-type(3){top:0;left:-6px;opacity:.55}.theater i:nth-of-type(4){top:0;right:-6px;opacity:.55}
+      .theater i{width:21px;height:25px}.theater i:first-of-type{top:12px;left:-5px}.theater i:nth-of-type(2){top:12px;right:-5px}
+      .theater i:nth-of-type(3){top:0;left:-6px}.theater i:nth-of-type(4){top:0;right:-6px}
       .text{min-width:0}.name{font-size:14px;font-weight:500}.summary,.media{font-size:12px;color:var(--secondary-text-color);margin-top:3px}
       .text>*{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.text .media:empty{display:none}
       .tile .media:not(:empty)+.summary{display:none}
@@ -164,8 +164,8 @@ class SpeakerCard extends HTMLElement {
   update() {
     if (!this.config || !this._hass) return;
     const root = this.shadowRoot, state = this.primary, attrs = state?.attributes || {};
-    const groupActive = [state, this._hass.states[this.config.television],
-      ...this.config.speakers.map((_, index) => this.speakerState(index))].some(active);
+    const groupActive = [state, ...this.config.speakers.map((_, index) => this.speakerState(index))].some(active) ||
+      displayActive(this._hass.states[this.config.television]);
     const missing = this.config.speakers.filter((_, index) => !available(this.speakerState(index))).length;
     const volume = this.volume?.attributes?.volume_level;
     root.querySelectorAll(".summary").forEach(el => { el.textContent =

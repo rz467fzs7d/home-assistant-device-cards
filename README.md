@@ -32,9 +32,9 @@ Commands go to **one explicitly selected primary player**, never all members.
 Volume defaults to that player, or can target a separate `volume_entity`.
 Member buttons open native HA details.
 
-The combined icon is active when any bound player, speaker or optional television
-is enabled. HA media-player semantics apply: `off`, `standby`, `unknown` and
-`unavailable` are inactive; `idle` and `paused` are still enabled.
+The combined icon is active when a player or speaker is `playing` or `buffering`,
+or the optional physical television is powered on.
+Paused and idle audio players stay gray; availability alone does not imply playback.
 Member icons in the dialog follow their own status independently.
 Colors inherit HA's media-player active/inactive theme colors.
 For integrations that miss AirPlay activity,

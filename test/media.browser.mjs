@@ -29,6 +29,18 @@ try {
       }
     });
     await page.screenshot({ path: `test-results/media-${width}.png` });
+    const symmetric = await page.evaluate(() => [...document.querySelector("main").children]
+      .filter(card => card.shadowRoot.querySelector(".pair"))
+      .every(card => {
+        const pair = card.shadowRoot.querySelector(".pair");
+        const [left, right] = pair.querySelectorAll("i");
+        const a = left.getBoundingClientRect(), b = right.getBoundingClientRect();
+        const p = pair.getBoundingClientRect();
+        return Math.abs(a.width - b.width) < .01 && Math.abs(a.height - b.height) < .01 &&
+          Math.abs(a.y - b.y) < .01 && Math.abs(a.x - p.x - (p.right - b.right)) < .01 &&
+          getComputedStyle(left).opacity === getComputedStyle(right).opacity;
+      }));
+    assert.ok(symmetric, "left/right artwork must have equal size, height, opacity and symmetric offsets");
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "page must not overflow");
     await page.locator("apple-theater-card .entry").click();
     const colors = await page.evaluate(() => {
