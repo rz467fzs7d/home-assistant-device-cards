@@ -2,8 +2,7 @@
   <!-- Adapted from elax46/custom-brand-icons smart-power-strip (MIT). -->
   <defs>
     <g id="socket" fill="currentColor">
-      <path fill-rule="evenodd" d="M0-2.048a2.048 2.048 0 1 0 0 4.096 2.048 2.048 0 0 0 0-4.096Zm0 .191a1.857 1.857 0 1 1 0 3.714 1.857 1.857 0 0 1 0-3.714Z"/>
-      <path d="M-.8-1.25h.36v.75H-.8z M.44-1.25H.8v.75H.44z M-.18-.18h.36v.65h-.36z M-1.1.4l.31-.18.53.91-.31.18z M.79.22l.31.18-.53.91-.31-.18z"/>
+      <path d="M-.95-1.35h.6v.95h-.6z M.35-1.35h.6v.95h-.6z M-.3-.15h.6v.8h-.6z M-1.25.55l.52-.3.6 1.04-.52.3z M.73.25l.52.3-.6 1.04-.52-.3z"/>
     </g>
     <mask id="cutouts">
       <rect width="24" height="24" fill="white"/>
