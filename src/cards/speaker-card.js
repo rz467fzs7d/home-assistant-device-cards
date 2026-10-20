@@ -1,5 +1,6 @@
 import homepod from "../assets/homepod.svg";
 import mini from "../assets/homepod-mini.svg";
+import appleTv from "../assets/apple-tv.svg";
 
 const FEATURES = { media_pause: 1, volume_set: 4, volume_mute: 8,
   media_previous_track: 16, media_next_track: 32, media_play: 16384 };
@@ -93,6 +94,7 @@ class SpeakerCard extends HTMLElement {
   }
   render() {
     const icon = `data:image/svg+xml,${encodeURIComponent(this.config.model === "mini" ? mini : homepod)}`;
+    const appleTvIcon = `data:image/svg+xml,${encodeURIComponent(appleTv)}`;
     this.shadowRoot.innerHTML = `<style>
       :host{display:block;min-width:0;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);color:var(--primary-text-color)}
       *{box-sizing:border-box}button,input{font:inherit}button{cursor:pointer;color:inherit}button:disabled{opacity:.35;cursor:default}
@@ -127,6 +129,7 @@ class SpeakerCard extends HTMLElement {
       .speaker-art ha-icon{--mdc-icon-size:40px}.speaker.active .speaker-art{color:var(--state-media_player-active-color,var(--state-active-color,var(--primary-color)))}.speaker.unavailable .speaker-art{color:var(--state-unavailable-color,var(--secondary-text-color));opacity:.4}
       .unavailable small{color:var(--error-color,#db4437)}.error{color:var(--error-color,#db4437);font-size:13px;overflow-wrap:anywhere}.error:empty{display:none}
       .details{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}[hidden]{display:none!important}
+      .apple-tv-icon{display:block;width:28px;height:28px;background:currentColor;mask:url("${appleTvIcon}") center/contain no-repeat;-webkit-mask:url("${appleTvIcon}") center/contain no-repeat}
     </style>
     <div class="tile"><button class="entry" aria-haspopup="dialog"><span class="art">${this.iconMarkup()}</span><span class="text"><div class="name"></div><div class="media"></div><div class="summary"></div></span></button>
     <button class="icon-button quick" data-action="play"></button></div>
@@ -170,12 +173,13 @@ class SpeakerCard extends HTMLElement {
       button.onclick = () => this.moreInfo(id);
       root.querySelector(".speakers").append(button);
     });
-    for (const [id, label, iconName] of [[this.config.entity, "Player Details", "mdi:information-outline"], [this.config.television, "Television", "mdi:television"]]) {
+    const theater = this.constructor.cardType === "apple-theater-card";
+    for (const [id, label, iconName] of [[this.config.entity, theater ? "Apple TV" : "Player Details", theater ? "apple-tv" : "mdi:information-outline"], [this.config.television, "Television", "mdi:television"]]) {
       if (!id) continue;
       const button = document.createElement("button");
       button.className = "icon-button";
       button.title = label; button.setAttribute("aria-label", label);
-      button.innerHTML = `<ha-icon icon="${iconName}"></ha-icon>`;
+      button.innerHTML = iconName === "apple-tv" ? '<span class="apple-tv-icon" aria-hidden="true"></span>' : `<ha-icon icon="${iconName}"></ha-icon>`;
       button.onclick = () => this.moreInfo(id);
       root.querySelector(".details").append(button);
     }

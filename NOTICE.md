@@ -10,7 +10,7 @@
 Home Assistant is a separate project. This library is a community extension,
 not an official Home Assistant product.
 
-`src/assets/homepod.svg` and `src/assets/homepod-mini.svg`:
+`src/assets/homepod.svg`, `src/assets/homepod-mini.svg` and `src/assets/apple-tv.svg`:
 - Source: https://github.com/elax46/custom-brand-icons/tree/main/icon-svg
 - License: MIT (retrieved 2026-10-20).
 - Fill color removed for theme-aware CSS masks. Paired layouts are composed

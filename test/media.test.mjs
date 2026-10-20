@@ -82,6 +82,17 @@ test("editor exposes filtered entity selectors and theater layout", () => {
   assert.equal(config.speakers.length, 4);
   assert.equal(editor.shadowRoot.querySelector(".channels ha-selector").label, "Front left");
 });
+test("theater Apple TV icon opens the configured Apple TV, not the active music source", () => {
+  const { card } = setup("apple-theater-card");
+  const button = card.shadowRoot.querySelector('.details [aria-label="Apple TV"]');
+  assert.ok(button.querySelector(".apple-tv-icon"));
+  let entity;
+  card.addEventListener("hass-more-info", event => { entity = event.detail.entityId; });
+  button.click();
+  assert.equal(entity, "media_player.main");
+  const stereo = setup().card;
+  assert.ok(stereo.shadowRoot.querySelector('.details [aria-label="Player Details"]'));
+});
 
 test("playing audio or an enabled display activates the group; paused audio stays gray", () => {
   const { card } = setup("apple-theater-card", {
