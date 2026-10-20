@@ -18,6 +18,56 @@ Tap to open a two-column panel with independent outlet controls.
 - No master switch, new entities, automation changes or external network calls.
 - Theme-aware styling, keyboard-accessible modal and 32px strip icon.
 
+### Stereo and home theater
+
+- `custom:homepod-stereo-card`: a HomePod or HomePod mini stereo pair.
+- `custom:apple-theater-card`: an Apple TV with two or four already configured
+  HomePods, ordered front left, front right, rear left, rear right.
+- `custom:general-speaker-stereo-card`: a stereo player, such as a Sonos pair.
+  Optional left/right entities provide individual status.
+
+Each has a visual editor. The tile opens playback, volume and member status.
+Unsupported controls are hidden; unknown volume is never presented as zero.
+Commands go to **one explicitly selected primary player**, never all members.
+Volume defaults to that player, or can target a separate `volume_entity`.
+Member buttons open native HA details.
+
+```yaml
+type: custom:homepod-stereo-card
+name: Bedroom Stereo
+entity: media_player.bedroom_stereo
+model: mini
+speakers:
+  - media_player.bedroom_left
+  - media_player.bedroom_right
+```
+
+```yaml
+type: custom:apple-theater-card
+name: Home Theater
+entity: media_player.theater_apple_tv
+volume_entity: media_player.theater_audio
+television: media_player.theater_tv
+model: homepod
+speakers:
+  - media_player.front_left
+  - media_player.front_right
+  - media_player.rear_left
+  - media_player.rear_right
+```
+
+```yaml
+type: custom:general-speaker-stereo-card
+name: Stereo
+entity: media_player.stereo
+```
+
+`television` is an optional details shortcut, not another playback target.
+The theater layout describes your existing system. It does not pair speakers,
+enable surround sound, synchronize independent players, or claim HA can control
+features it does not expose. Select the real playback coordinator yourself.
+Community HomePod artwork is MIT-licensed, not Apple's proprietary icons.
+
 ## Install with HACS
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=rz467fzs7d&repository=home-assistant-device-cards&category=plugin)
