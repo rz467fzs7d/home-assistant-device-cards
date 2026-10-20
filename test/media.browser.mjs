@@ -48,6 +48,10 @@ try {
     assert.equal(await page.locator("apple-theater-card dialog .speaker").count(), 4);
     const rect = await page.locator("apple-theater-card dialog").boundingBox();
     assert.ok(rect.x >= 0 && rect.x + rect.width <= width, "dialog fits viewport");
+    const slider = await page.locator("apple-theater-card dialog input").boundingBox();
+    assert.ok(Math.abs(slider.x + slider.width / 2 - (rect.x + rect.width / 2)) < 1, "volume slider remains centered without mute");
+    assert.ok((await page.locator("apple-theater-card .now").boundingBox()).height >= 64);
+    assert.equal(await page.locator("apple-theater-card dialog .speaker small").nth(1).textContent(), "Paused");
     await page.locator('apple-theater-card dialog [aria-label="Pause"]').click();
     assert.equal(await page.evaluate(() => window.calls.length), 1);
     assert.equal(await page.evaluate(() => window.calls[0][2].entity_id), "media_player.main");

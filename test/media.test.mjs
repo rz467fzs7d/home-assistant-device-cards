@@ -23,7 +23,7 @@ test("registers three cards, shows media safely and reports individual availabil
     const { card } = setup(type);
     assert.equal(card.shadowRoot.querySelector(".media").textContent, "<Song>");
     assert.equal(card.shadowRoot.querySelectorAll("song").length, 0);
-    assert.match(card.shadowRoot.querySelector(".summary").textContent, /1 unavailable/);
+    assert.match(card.shadowRoot.querySelector(".summary").textContent, /1 Unavailable/);
     assert.equal(card.shadowRoot.querySelectorAll(".speaker").length, 2);
     assert.equal(card.shadowRoot.querySelectorAll(".speaker .speaker-art").length, 2);
   }
@@ -59,7 +59,7 @@ test("validates channels and entities; theater supports four speakers", () => {
   assert.throws(() => card.setConfig({ entity: "media_player.x", speakers: ["media_player.x"] }), /two/);
   const theater = setup("apple-theater-card", { speakers: ["a", "b", "c", "d"].map(x => `media_player.${x}`) }).card;
   assert.equal(theater.shadowRoot.querySelectorAll(".speaker").length, 4);
-  assert.match(theater.shadowRoot.textContent, /Rear right/);
+  assert.match(theater.shadowRoot.textContent, /Rear Right/);
   assert.throws(() => theater.setConfig({ entity: "media_player.x", speakers: ["media_player.a", "media_player.a"] }), /unique/);
   assert.doesNotThrow(() => setup("general-speaker-stereo-card", { speakers: [] }));
 });
@@ -95,7 +95,7 @@ test("theater icons follow each device independently, including MA activity", ()
   assert.equal(pair.querySelector("ha-icon").classList.contains("playing"), false);
   assert.equal(pair.querySelectorAll("i")[0].classList.contains("playing"), true);
   assert.equal(pair.querySelectorAll("i")[1].classList.contains("playing"), false);
-  assert.equal(card.shadowRoot.querySelector(".speaker small").textContent, "playing");
+  assert.equal(card.shadowRoot.querySelector(".speaker small").textContent, "Playing");
   card._hass.states["media_player.ma_left"].state = "paused";
   card._hass.states["media_player.main"].state = "playing";
   card.update();

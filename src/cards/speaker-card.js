@@ -9,7 +9,7 @@ const TYPES = {
   "general-speaker-stereo-card": "Speaker Stereo"
 };
 const available = state => state && !["unknown", "unavailable"].includes(state.state);
-const stateLabel = state => (state?.state || "unavailable").replaceAll("_", " ");
+const stateLabel = state => (state?.state || "unavailable").replaceAll("_", " ").replace(/\b[a-z]/g, letter => letter.toUpperCase());
 const mediaEntity = id => typeof id === "string" && /^media_player\.[a-z0-9_]+$/.test(id);
 
 class SpeakerCard extends HTMLElement {
@@ -92,9 +92,12 @@ class SpeakerCard extends HTMLElement {
       .icon-button{border:0;border-radius:50%;background:var(--secondary-background-color,#f4f4f4);width:40px;height:40px;flex:none;display:inline-grid;place-items:center}
       dialog{color:inherit;background:var(--card-background-color,#fff);border:1px solid var(--divider-color,#ddd);border-radius:8px;width:min(420px,calc(100vw - 32px));padding:20px;max-height:85dvh;overflow:auto}
       dialog::backdrop{background:rgba(0,0,0,.48)}header{display:flex;align-items:center;gap:12px;margin-bottom:20px}h2{font-size:18px;font-weight:500;flex:1;min-width:0;overflow-wrap:anywhere;margin:0}
-      .now{text-align:center;overflow-wrap:anywhere}.now .media{font-size:16px;color:var(--primary-text-color)}.artist{font-size:13px;color:var(--secondary-text-color);margin-top:5px}
-      .transport{display:flex;justify-content:center;gap:20px;margin:20px 0}.transport .icon-button{width:48px;height:48px}
-      .volume{display:flex;align-items:center;gap:12px;margin:16px 0}.volume input{min-width:0;flex:1;accent-color:var(--primary-color)}output{font-size:12px;min-width:36px;text-align:right}
+      .now{min-height:64px;display:flex;flex-direction:column;justify-content:center;text-align:center;overflow-wrap:anywhere}.now .media{font-size:16px;color:var(--primary-text-color)}.artist{font-size:13px;color:var(--secondary-text-color);margin-top:5px}
+      .now .media:empty,.artist:empty{display:none}
+      .transport{min-height:48px;display:flex;justify-content:center;gap:20px;margin:24px 0}.transport .icon-button{width:48px;height:48px}
+      .volume{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:8px;margin:24px 0}
+      .volume .mute{grid-column:1;grid-row:1}.volume input{grid-column:2;grid-row:1;width:100%;min-width:0;margin:0;accent-color:var(--primary-color)}
+      output{grid-column:3;grid-row:1;font-size:12px;text-align:center}
       .speakers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border-top:1px solid var(--divider-color,#ddd);padding-top:16px}
       .speaker{border:0;background:none;text-align:center;padding:14px 4px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}.speaker span{display:block;font-size:13px;overflow-wrap:anywhere}.speaker small{display:block;color:var(--secondary-text-color)}
       .speaker-art{display:block;width:48px;height:48px;margin-bottom:4px;color:var(--secondary-text-color)}
@@ -133,7 +136,7 @@ class SpeakerCard extends HTMLElement {
     slider.oninput = () => { root.querySelector("output").textContent = `${slider.value}%`; };
     slider.onchange = () => this.command("volume_set", { volume_level: Number(slider.value) / 100 });
     const positions = this.config.speakers.length === 4
-      ? ["Front left", "Front right", "Rear left", "Rear right"] : ["Left", "Right"];
+      ? ["Front Left", "Front Right", "Rear Left", "Rear Right"] : ["Left", "Right"];
     this.config.speakers.forEach((id, index) => {
       const button = document.createElement("button");
       button.className = "speaker";
@@ -145,7 +148,7 @@ class SpeakerCard extends HTMLElement {
       button.onclick = () => this.moreInfo(id);
       root.querySelector(".speakers").append(button);
     });
-    for (const [id, label, iconName] of [[this.config.entity, "Player details", "mdi:information-outline"], [this.config.television, "Television", "mdi:television"]]) {
+    for (const [id, label, iconName] of [[this.config.entity, "Player Details", "mdi:information-outline"], [this.config.television, "Television", "mdi:television"]]) {
       if (!id) continue;
       const button = document.createElement("button");
       button.className = "icon-button";
@@ -162,7 +165,7 @@ class SpeakerCard extends HTMLElement {
     const missing = this.config.speakers.filter((_, index) => !available(this.speakerState(index))).length;
     const volume = this.volume?.attributes?.volume_level;
     root.querySelectorAll(".summary").forEach(el => { el.textContent =
-      `${stateLabel(state)}${typeof volume === "number" ? ` · ${Math.round(volume * 100)}%` : ""}${missing ? ` · ${missing} unavailable` : ""}`; });
+      `${stateLabel(state)}${typeof volume === "number" ? ` · ${Math.round(volume * 100)}%` : ""}${missing ? ` · ${missing} Unavailable` : ""}`; });
     root.querySelectorAll(".media").forEach(el => { el.textContent = ["playing", "paused", "buffering"].includes(state?.state) ? attrs.media_title || "" : ""; });
     root.querySelector(".artist").textContent = ["playing", "paused", "buffering"].includes(state?.state) ? attrs.media_artist || attrs.app_name || "" : "";
     root.querySelector(".tile").classList.toggle("active", state?.state === "playing");
