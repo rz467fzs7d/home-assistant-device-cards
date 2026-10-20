@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Adapted from elax46/custom-brand-icons smart-power-strip (MIT). -->
+  <defs>
+    <g id="socket" fill="currentColor">
+      <path fill-rule="evenodd" d="M0-2.048a2.048 2.048 0 1 0 0 4.096 2.048 2.048 0 0 0 0-4.096Zm0 .191a1.857 1.857 0 1 1 0 3.714 1.857 1.857 0 0 1 0-3.714Z"/>
+      <path d="M-.8-1.25h.36v.75H-.8z M.44-1.25H.8v.75H.44z M-.18-.18h.36v.65h-.36z M-1.1.4l.31-.18.53.91-.31.18z M.79.22l.31.18-.53.91-.31-.18z"/>
+    </g>
+    <mask id="cutouts">
+      <rect width="24" height="24" fill="white"/>
+      <g fill="black">
+        <circle cx="8.5" cy="10.45" r="1.393"/>
+        <circle cx="11.7" cy="10.45" r="1.393"/>
+        <circle cx="14.9" cy="10.45" r="1.393"/>
+        <circle cx="9.4" cy="13.45" r="1.393"/>
+        <circle cx="12.6" cy="13.45" r="1.393"/>
+        <circle cx="15.8" cy="13.45" r="1.393"/>
+      </g>
+    </mask>
+  </defs>
+  <g fill="currentColor">
+    <rect x="5.8" y="7.96" width="12.7" height="8.08" rx=".75" mask="url(#cutouts)"/>
+    <rect x="5.3" y="10.76" width=".7" height="2.29" rx=".4"/>
+  </g>
+  <use href="#socket" transform="translate(8.5 10.45) scale(.65)"/>
+  <use href="#socket" transform="translate(11.7 10.45) scale(.65)"/>
+  <use href="#socket" transform="translate(14.9 10.45) scale(.65)"/>
+  <use href="#socket" transform="translate(9.4 13.45) scale(.65)"/>
+  <use href="#socket" transform="translate(12.6 13.45) scale(.65)"/>
+  <use href="#socket" transform="translate(15.8 13.45) scale(.65)"/>
+</svg>

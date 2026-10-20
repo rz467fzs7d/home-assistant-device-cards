@@ -16,6 +16,16 @@ not an official Home Assistant product.
 - Fill color removed for theme-aware CSS masks. Paired layouts are composed
   by this library. These are community icons, not Apple SF Symbols.
 
+`src/assets/powerstrip-cn-*.svg`:
+- Source: https://github.com/elax46/custom-brand-icons/blob/main/icon-svg/smart-power-strip.svg
+- License: MIT, as reproduced below.
+- Adaptations retain the original case and circular socket styling, remove the
+  master switch, and use Chinese five-hole socket markings. Variants include
+  six staggered sockets with four decorative USB ports, six staggered sockets
+  without USB, and four or five inline sockets without USB.
+- USB ports in these illustrations do not imply independently controllable
+  entities. These assets do not certify electrical standards compliance.
+
 MIT License
 
 Copyright (c) 2026
