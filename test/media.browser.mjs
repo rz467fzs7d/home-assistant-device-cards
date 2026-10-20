@@ -86,6 +86,11 @@ try {
         return { width: r.width, height: r.height, top: r.top };
       }));
       assert.deepEqual(pods[0], pods[1], "paired HomePods have identical dimensions and alignment");
+      {
+        const box = await page.locator("apple-theater-card .tile .theater-box").boundingBox();
+        assert.ok(Math.abs(pods[0].top + pods[0].height / 2 - (box.y + box.height / 2)) <= 1,
+          "stereo speakers sit beside Apple TV, not above it");
+      }
       await page.locator("apple-theater-card").screenshot({ path: `test-results/theater-${model}-pair-${width}.png` });
     }
     assert.deepEqual(errors, []);
