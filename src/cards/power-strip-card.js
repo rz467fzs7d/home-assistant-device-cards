@@ -1,6 +1,4 @@
-import powerStripSvg from "../assets/powerstrip.svg";
-
-const powerStripIcon = `data:image/svg+xml,${encodeURIComponent(powerStripSvg)}`;
+import { powerStripIcons } from "./power-strip-icons.js";
 
 /* Compact entry with independent outlet controls. No aggregate switching. */
 class PowerStripCard extends HTMLElement {
@@ -11,6 +9,7 @@ class PowerStripCard extends HTMLElement {
   }
   setConfig(config) {
     if (!Array.isArray(config.entities) || !config.entities.length) throw new Error("entities is required");
+    if (!Object.hasOwn(powerStripIcons, config.icon_variant || "default")) throw new Error("Unknown icon_variant");
     this.config = { name: "Power Strip", ...config,
       entities: config.entities.map(item => typeof item === "string" ? { entity: item } : { ...item }) };
     if (this.config.entities.some(item => !/^(switch|light)\./.test(item.entity))) {
@@ -25,6 +24,7 @@ class PowerStripCard extends HTMLElement {
   getGridOptions() { return { columns: 6, rows: 1, min_columns: 3 }; }
   disconnectedCallback() { this.shadowRoot?.querySelector("dialog")?.close(); }
   render() {
+    const powerStripIcon = `data:image/svg+xml,${encodeURIComponent(powerStripIcons[this.config.icon_variant || "default"].svg)}`;
     this.shadowRoot.innerHTML = `
       <style>
         :host{display:block;color:var(--primary-text-color);font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif)}

@@ -1,3 +1,5 @@
+import { powerStripIcons } from "./power-strip-icons.js";
+
 class PowerStripEditor extends HTMLElement {
   setConfig(config) {
     this.config = { ...config, entities: (config.entities || []).map(e => typeof e === "string" ? { entity: e } : { ...e }) };
@@ -36,7 +38,7 @@ class PowerStripEditor extends HTMLElement {
     this.shadowRoot.innerHTML = `<style>
       :host{display:block;color:var(--primary-text-color)}
       label{display:grid;gap:6px;font-size:13px;margin-bottom:12px}
-      input{box-sizing:border-box;width:100%;padding:10px;border:1px solid var(--divider-color,#ccc);border-radius:4px;background:var(--card-background-color,#fff);color:inherit;font:inherit}
+      input,select{box-sizing:border-box;width:100%;padding:10px;border:1px solid var(--divider-color,#ccc);border-radius:4px;background:var(--card-background-color,#fff);color:inherit;font:inherit}
       .row{border-top:1px solid var(--divider-color,#ccc);padding:16px 0}
       .toolbar{display:flex;justify-content:flex-end;gap:4px}
       button{min-width:40px;min-height:40px;background:none;border:0;color:var(--primary-color);cursor:pointer}
@@ -46,6 +48,16 @@ class PowerStripEditor extends HTMLElement {
     </style><div class="fields-root"></div>`;
     const root = this.shadowRoot.querySelector(".fields-root");
     root.append(this.field("Name", this.config.name, value => { this.config = { ...this.config, name: value }; this.emit(); }));
+    const iconLabel = document.createElement("label");
+    iconLabel.textContent = "Appearance";
+    const icons = document.createElement("select");
+    for (const [value, { label }] of Object.entries(powerStripIcons)) {
+      const option = document.createElement("option");
+      option.value = value; option.textContent = label; icons.append(option);
+    }
+    icons.value = this.config.icon_variant || "default";
+    icons.onchange = () => { this.config = { ...this.config, icon_variant: icons.value }; this.emit(); };
+    iconLabel.append(icons); root.append(iconLabel);
     this.config.entities.forEach((item, index) => {
       const row = document.createElement("div");
       row.className = "row";

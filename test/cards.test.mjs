@@ -42,6 +42,18 @@ test("summary hides zero counts in both tile and dialog", () => {
   card.hass = { states: { "switch.one": { state: "on" }, "light.two": { state: "on" } } };
   assert.equal(card.shadowRoot.querySelector(".summary").textContent, "2 On · 1 unavailable");
 });
+test("appearance changes only artwork, not outlet controls", () => {
+  const { card } = setup();
+  for (const icon_variant of ["cn-six-usb", "cn-five-cord-right", "cn-five-cord-left"]) {
+    card.setConfig({ icon_variant, entities: ["switch.one", "light.two"] });
+    assert.equal(card.shadowRoot.querySelectorAll(".outlet").length, 2);
+    assert.equal(card.shadowRoot.querySelector(".summary").textContent, "1 On · 1 Off");
+    const css = card.shadowRoot.querySelector("style").textContent;
+    const svg = decodeURIComponent(css.match(/mask:url\("([^"]+)"\)/)[1].split(",")[1]);
+    assert.match(svg, /id="cutouts"/);
+  }
+  assert.throws(() => card.setConfig({ entities: ["switch.one"], icon_variant: "bogus" }), /icon_variant/);
+});
 test("individual controls, service errors, confirmation and duplicate protection", async () => {
   const { window, card, calls } = setup();
   await card.toggle({ entity: "switch.one" });
@@ -83,5 +95,10 @@ test("editor supports selection, names, order, removal and append", () => {
   editor.shadowRoot.querySelector('[aria-label="Remove outlet"]').click();
   assert.equal(config.entities.length, 1);
   editor.shadowRoot.querySelector('[aria-label="Add outlet"]').click();
+  assert.equal(config.entities.length, 2);
+  const appearance = editor.shadowRoot.querySelector("select");
+  appearance.value = "cn-six-usb";
+  appearance.dispatchEvent(new window.Event("change"));
+  assert.equal(config.icon_variant, "cn-six-usb");
   assert.equal(config.entities.length, 2);
 });
