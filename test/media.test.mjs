@@ -82,3 +82,24 @@ test("editor exposes filtered entity selectors and theater layout", () => {
   assert.equal(config.speakers.length, 4);
   assert.equal(editor.shadowRoot.querySelector(".channels ha-selector").label, "Front left");
 });
+
+test("theater icons follow each device independently, including MA activity", () => {
+  const { card } = setup("apple-theater-card", {
+    speaker_state_entities: ["media_player.ma_left", "media_player.ma_right"]
+  });
+  card._hass.states["media_player.main"].state = "off";
+  card._hass.states["media_player.ma_left"] = { state: "playing" };
+  card._hass.states["media_player.ma_right"] = { state: "paused" };
+  card.update();
+  const pair = card.shadowRoot.querySelector(".tile .pair");
+  assert.equal(pair.querySelector("ha-icon").classList.contains("playing"), false);
+  assert.equal(pair.querySelectorAll("i")[0].classList.contains("playing"), true);
+  assert.equal(pair.querySelectorAll("i")[1].classList.contains("playing"), false);
+  assert.equal(card.shadowRoot.querySelector(".speaker small").textContent, "playing");
+  card._hass.states["media_player.ma_left"].state = "paused";
+  card._hass.states["media_player.main"].state = "playing";
+  card.update();
+  assert.equal(pair.querySelector("ha-icon").classList.contains("playing"), true);
+  assert.equal(pair.querySelectorAll("i.playing").length, 0);
+  assert.equal(card.volumeId, "media_player.main");
+});

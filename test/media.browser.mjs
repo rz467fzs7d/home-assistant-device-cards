@@ -31,6 +31,19 @@ try {
     await page.screenshot({ path: `test-results/media-${width}.png` });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "page must not overflow");
     await page.locator("apple-theater-card .entry").click();
+    const colors = await page.evaluate(() => {
+      const card = document.querySelector("apple-theater-card");
+      card._hass.states["media_player.main"].state = "off";
+      card._hass.states["media_player.speaker_1"].state = "paused";
+      card.update();
+      const root = card.shadowRoot;
+      const colors = [root.querySelector(".pair ha-icon"), ...root.querySelector(".pair").querySelectorAll("i")].map(el => getComputedStyle(el).color);
+      card._hass.states["media_player.main"].state = "playing";
+      card.update();
+      return colors;
+    });
+    assert.notEqual(colors[0], colors[1], "playing left speaker differs from idle TV");
+    assert.equal(colors[0], colors[2], "paused right speaker stays gray");
     await page.screenshot({ path: `test-results/theater-${width}.png` });
     assert.equal(await page.locator("apple-theater-card dialog .speaker").count(), 4);
     const rect = await page.locator("apple-theater-card dialog").boundingBox();

@@ -56,7 +56,8 @@ class SpeakerEditor extends HTMLElement {
       root.append(this.selectField("Speaker layout", "layout",
         theater ? [["2", "Stereo pair"], ["4", "Front and rear pairs"]] : [["0", "Single stereo entity"], ["2", "Left and right entities"]],
         String(this.config.speakers.length || (theater ? 2 : 0)), value => {
-          this.emit({ speakers: Array.from({ length: Number(value) }, (_, i) => this.config.speakers[i] || "") });
+          this.emit({ speakers: Array.from({ length: Number(value) }, (_, i) => this.config.speakers[i] || ""),
+            ...(this.config.speaker_state_entities ? { speaker_state_entities: Array.from({ length: Number(value) }, (_, i) => this.config.speaker_state_entities[i] || "") } : {}) });
           this.render();
         }));
     }
@@ -67,6 +68,10 @@ class SpeakerEditor extends HTMLElement {
       channels.append(this.entityField(positions[i], this.config.speakers[i], value => {
         const speakers = Array.from({ length: count }, (_, j) => this.config.speakers[j] || "");
         speakers[i] = value; this.emit({ speakers });
+      }));
+      channels.append(this.entityField(`${positions[i]} activity entity (optional)`, this.config.speaker_state_entities?.[i], value => {
+        const entities = Array.from({ length: count }, (_, j) => this.config.speaker_state_entities?.[j] || "");
+        entities[i] = value; this.emit({ speaker_state_entities: entities });
       }));
     }
     root.append(channels);

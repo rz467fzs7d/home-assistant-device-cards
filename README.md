@@ -32,6 +32,14 @@ Commands go to **one explicitly selected primary player**, never all members.
 Volume defaults to that player, or can target a separate `volume_entity`.
 Member buttons open native HA details.
 
+Each speaker icon highlights independently when its entity reports `playing`.
+The theater screen follows the primary player; playing on Apple TV never
+automatically lights all speakers. For integrations that miss AirPlay activity,
+`speaker_state_entities` accepts an optional parallel list of activity entities
+(for example HA's Music Assistant players). These affect display only, never
+service targets. Native `playing` takes precedence; otherwise an available
+activity entity supplies the status, with fallback to the native entity.
+
 ```yaml
 type: custom:homepod-stereo-card
 name: Bedroom Stereo
