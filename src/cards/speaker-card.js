@@ -114,6 +114,7 @@ class SpeakerCard extends HTMLElement {
       .theater i:first-of-type{top:0;left:-2px}.theater i:nth-of-type(2){top:0;right:-2px}
       .theater i:nth-of-type(3){top:10px;left:-2px}.theater i:nth-of-type(4){top:10px;right:-2px}
       .theater.slots-2 i{top:10px}
+      .theater.slots-2 i:first-of-type{left:-5px}.theater.slots-2 i:nth-of-type(2){right:-5px}
       .theater-box{position:absolute;z-index:1;left:6px;top:12px;width:20px;height:20px;border-radius:5px;background:currentColor;box-shadow:0 0 0 1.5px var(--ha-card-background,var(--card-background-color,#fff));display:grid;place-items:center}
       .theater-box .apple-tv-icon{width:17px;height:17px;background:var(--ha-card-background,var(--card-background-color,#fff))}
       .text{min-width:0}.name{font-size:14px;font-weight:500}.summary,.media{font-size:12px;color:var(--secondary-text-color);margin-top:3px}
