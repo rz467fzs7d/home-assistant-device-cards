@@ -3,6 +3,10 @@
 Compact, device-focused dashboard cards for Home Assistant.
 One frontend library, independently configurable cards, no backend integration.
 
+![Power strip, stereo and home theater card overview](docs/images/cards-overview.png)
+
+Screenshots show the actual cards with synthetic demo entities and states.
+
 ## Cards
 
 ### Power Strip
@@ -15,14 +19,19 @@ Tap to open a two-column panel with independent outlet controls.
 - Live on/off/unavailable counts; unavailable outlets cannot be operated.
 - Individual service errors displayed in the panel.
 - Visual editor with entity selection and reordering.
+- Nine artwork options, including Chinese five-hole sockets, staggered layouts,
+  decorative USB ports, and left/right power cords.
 - No master switch, new entities, automation changes or external network calls.
 - Theme-aware styling, keyboard-accessible modal and 32px strip icon.
+
+<img src="docs/images/power-strip-controls.png" alt="Power strip panel with six independently controlled outlets, including a lamp" width="360">
 
 ### Stereo and home theater
 
 - `custom:homepod-stereo-card`: a HomePod or HomePod mini stereo pair.
 - `custom:apple-theater-card`: an Apple TV with two or four already configured
-  HomePods, ordered front left, front right, rear left, rear right.
+  HomePods. Two speakers are Left and Right; four speakers are Front Left,
+  Front Right, Rear Left and Rear Right.
 - `custom:general-speaker-stereo-card`: a stereo player, such as a Sonos pair.
   Optional left/right entities provide individual status.
 
@@ -36,10 +45,14 @@ The first playing/buffering source wins, with the primary checked first.
 A paused source (or MA's idle state with retained media) is retained for resume;
 otherwise the first resumable source is used,
 falling back to the primary. Alternate sources use their own volume control;
-`volume_entity` applies only to the primary. The dialog identifies the selected player.
+`volume_entity` applies only to the primary. Internal player names are not displayed.
 Controls remain limited by what the selected HA integration actually supports;
 an activity status alone does not guarantee control over every external AirPlay source.
 Member buttons open native HA details.
+
+| HomePod Stereo | Apple Theater |
+| --- | --- |
+| <img src="docs/images/homepod-stereo-controls.png" alt="HomePod stereo playback and independent left and right status" width="360"> | <img src="docs/images/apple-theater-controls.png" alt="Apple theater playback, speaker status, Apple TV and physical television shortcuts" width="360"> |
 
 The combined icon is active when a player or speaker is `playing` or `buffering`,
 or the optional physical television is powered on.
@@ -113,6 +126,7 @@ No Home Assistant restart is needed.
 ```yaml
 type: custom:power-strip-card
 name: Power Strip
+icon_variant: cn-six-usb
 entities:
   - entity: switch.desk_outlet
     name: Monitor
@@ -128,6 +142,20 @@ entities:
 `true`. Names default to `Outlet 1`, `Outlet 2`, etc.
 The icon is decorative: its socket count does not represent the actual count.
 Actual counts and the controls reflect the configured entities.
+
+Choose **Appearance** in the visual editor, or set `icon_variant`:
+
+| Value | Artwork |
+| --- | --- |
+| `default` | Original power strip |
+| `cn-six-usb` | Six staggered sockets with four decorative USB ports |
+| `cn-six` | Six staggered sockets without USB |
+| `cn-four-inline` / `cn-five-inline` | Four or five inline sockets |
+| `cn-four-cord-left` / `cn-four-cord-right` | Four inline sockets with a left/right cord |
+| `cn-five-cord-left` / `cn-five-cord-right` | Five inline sockets with a left/right cord |
+
+All `cn-*` artwork uses Chinese five-hole socket markings. Changing appearance
+does not change the number of controls or their entity bindings.
 
 ## Migrating the standalone card
 
@@ -147,6 +175,16 @@ npm test
 Cards live under `src/cards/`; `src/index.js` registers the library.
 Add shared utilities only when multiple cards actually need them.
 The build emits one self-contained module, including the icon.
+
+Regenerate the documentation screenshots after building:
+
+```sh
+node scripts/screenshots.mjs
+```
+
+This uses synthetic data and local Chrome (or `PW_CHANNEL=chromium`).
+It downloads pinned MDI SVGs for the screenshot fixture only; the cards do not
+make those network calls.
 
 ## Releases
 
