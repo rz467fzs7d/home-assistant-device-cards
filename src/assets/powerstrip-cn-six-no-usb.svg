@@ -18,8 +18,8 @@
     </mask>
   </defs>
   <g fill="currentColor">
-    <rect x="5.8" y="7.96" width="12.7" height="8.08" rx=".75" mask="url(#cutouts)"/>
-    <rect x="5.3" y="10.76" width=".7" height="2.29" rx=".4"/>
+    <rect x="6.2" y="8.5" width="11.9" height="6.9" rx=".65" mask="url(#cutouts)"/>
+    <rect x="5.7" y="10.76" width=".7" height="2.29" rx=".4"/>
   </g>
   <use href="#socket" transform="translate(8.5 10.45) scale(.65)"/>
   <use href="#socket" transform="translate(11.7 10.45) scale(.65)"/>
