@@ -25,12 +25,14 @@ class PowerStripCard extends HTMLElement {
   disconnectedCallback() { this.shadowRoot?.querySelector("dialog")?.close(); }
   render() {
     const powerStripIcon = `data:image/svg+xml,${encodeURIComponent(powerStripIcons[this.config.icon_variant || "default"].svg)}`;
+    const largeIcon = ["cn-six-usb", "cn-six"].includes(this.config.icon_variant);
+    const iconSize = largeIcon ? 38 : 32;
     this.shadowRoot.innerHTML = `
       <style>
         :host{display:block;color:var(--primary-text-color);font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif)}
         *{box-sizing:border-box}button{font:inherit;color:inherit;cursor:pointer}
         .entry{width:100%;height:66px;display:flex;align-items:center;gap:12px;padding:10px 12px;text-align:left;background:var(--ha-card-background,var(--card-background-color,#fff));border:1px solid var(--divider-color,#ddd);border-radius:8px}
-        .strip-icon{flex:0 0 32px;width:32px;height:32px;background:var(--secondary-text-color);mask:url("${powerStripIcon}") center/contain no-repeat;-webkit-mask:url("${powerStripIcon}") center/contain no-repeat}
+        .strip-icon{flex:0 0 ${iconSize}px;width:${iconSize}px;height:${iconSize}px;margin-inline:${largeIcon ? -3 : 0}px;background:var(--secondary-text-color);mask:url("${powerStripIcon}") center/contain no-repeat;-webkit-mask:url("${powerStripIcon}") center/contain no-repeat}
         .entry.active .strip-icon{background:var(--state-switch-active-color,#e6ac00)}
         .entry-info{min-width:0;overflow-wrap:anywhere}
         .name{font-size:14px;font-weight:500}.summary{font-size:12px;color:var(--secondary-text-color);margin-top:3px}
