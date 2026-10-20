@@ -25,6 +25,8 @@ not an official Home Assistant product.
   without USB, and four or five inline sockets without USB.
 - USB ports in these illustrations do not imply independently controllable
   entities. These assets do not certify electrical standards compliance.
+- The `*-inline-cord.svg` variants reuse the cord geometry from SVG Repo
+  Powerstrip 298 (CC0, credited above), scaled to fit the case.
 
 MIT License
 
