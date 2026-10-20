@@ -8,6 +8,8 @@ Approved Chinese five-hole socket variants:
 | `powerstrip-cn-six-no-usb.svg` | Six sockets, staggered rows of three | None |
 | `powerstrip-cn-four-inline.svg` | Four sockets in one row | None |
 | `powerstrip-cn-five-inline.svg` | Five sockets in one row | None |
+| `powerstrip-cn-four-inline-cord.svg` | Four sockets in one row, visible power cord | None |
+| `powerstrip-cn-five-inline-cord.svg` | Five sockets in one row, visible power cord | None |
 
 All variants use `currentColor`, transparent cutouts, and the same socket
 artwork. The four- and five-socket inline versions include additional padding
