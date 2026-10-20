@@ -24,6 +24,10 @@ class SpeakerCard extends HTMLElement {
   setConfig(config) {
     const type = this.constructor.cardType;
     if (!mediaEntity(config.entity)) throw new Error("A primary media_player entity is required");
+    if (config.playback_entities && (!Array.isArray(config.playback_entities) ||
+      config.playback_entities.some(id => !mediaEntity(id)))) {
+      throw new Error("playback_entities must contain media_player entities");
+    }
     const speakers = (config.speakers || []).slice();
     if (speakers.some(id => !mediaEntity(id))) throw new Error("Speakers must be media_player entities");
     if (new Set(speakers).size !== speakers.length) throw new Error("Speakers must be unique");
@@ -40,6 +44,7 @@ class SpeakerCard extends HTMLElement {
     }
     if (config.model && !["homepod", "mini"].includes(config.model)) throw new Error("model must be homepod or mini");
     this.config = { ...config, type: `custom:${type}`, name: config.name || TYPES[type], speakers };
+    this._playbackId = config.entity;
     this.pending = false;
     if (!this.shadowRoot) this.attachShadow({ mode: "open" });
     this.render();
@@ -48,9 +53,21 @@ class SpeakerCard extends HTMLElement {
   getCardSize() { return 1; }
   getGridOptions() { return { columns: 12, rows: 1, min_columns: 6 }; }
   disconnectedCallback() { this.shadowRoot?.querySelector("dialog")?.close(); }
-  get primary() { return this._hass?.states[this.config.entity]; }
-  get volumeId() { return this.config.volume_entity || this.config.entity; }
+  get playbackId() { return this._playbackId || this.config.entity; }
+  get primary() { return this._hass?.states[this.playbackId]; }
+  get volumeId() {
+    return this.playbackId === this.config.entity
+      ? this.config.volume_entity || this.config.entity : this.playbackId;
+  }
   get volume() { return this._hass?.states[this.volumeId]; }
+  resolvePlayback() {
+    const ids = [this.config.entity, ...(this.config.playback_entities || [])];
+    const states = this._hass.states;
+    // Retain a paused source so its Play button resumes that same session.
+    this._playbackId = ids.find(id => active(states[id])) ||
+      (ids.includes(this.playbackId) && states[this.playbackId]?.state === "paused" ? this.playbackId : null) ||
+      ids.find(id => states[id]?.state === "paused") || this.config.entity;
+  }
   speakerState(index) {
     const native = this._hass?.states[this.config.speakers[index]];
     const activity = this._hass?.states[this.config.speaker_state_entities?.[index]];
@@ -96,6 +113,7 @@ class SpeakerCard extends HTMLElement {
       dialog::backdrop{background:rgba(0,0,0,.48)}header{display:flex;align-items:center;gap:12px;margin-bottom:20px}h2{font-size:18px;font-weight:500;flex:1;min-width:0;overflow-wrap:anywhere;margin:0}
       .now{min-height:64px;display:flex;flex-direction:column;justify-content:center;text-align:center;overflow-wrap:anywhere}.now .media{font-size:16px;color:var(--primary-text-color)}.artist{font-size:13px;color:var(--secondary-text-color);margin-top:5px}
       .now .media:empty,.artist:empty{display:none}
+      .source{font-size:12px;color:var(--secondary-text-color);margin-top:8px}.source:empty{display:none}
       .transport{min-height:48px;display:flex;justify-content:center;gap:20px;margin:24px 0}.transport .icon-button{width:48px;height:48px}
       .volume{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:8px;margin:24px 0}
       .volume .mute{grid-column:1;grid-row:1}.volume input{grid-column:2;grid-row:1;width:100%;min-width:0;margin:0;accent-color:var(--primary-color)}
@@ -111,7 +129,7 @@ class SpeakerCard extends HTMLElement {
     <div class="tile"><button class="entry" aria-haspopup="dialog"><span class="art">${this.iconMarkup()}</span><span class="text"><div class="name"></div><div class="media"></div><div class="summary"></div></span></button>
     <button class="icon-button quick" data-action="play"></button></div>
     <dialog><header><span class="art">${this.iconMarkup()}</span><h2></h2><button class="icon-button close" aria-label="Close" title="Close"><ha-icon icon="mdi:close"></ha-icon></button></header>
-    <div class="now"><div class="media"></div><div class="artist"></div><div class="summary"></div></div>
+    <div class="now"><div class="media"></div><div class="artist"></div><div class="summary"></div><div class="source"></div></div>
     <div class="transport"><button class="icon-button" data-action="media_previous_track" title="Previous" aria-label="Previous"><ha-icon icon="mdi:skip-previous"></ha-icon></button><button class="icon-button" data-action="play"></button><button class="icon-button" data-action="media_next_track" title="Next" aria-label="Next"><ha-icon icon="mdi:skip-next"></ha-icon></button></div>
     <div class="volume"><button class="icon-button mute" data-action="volume_mute"></button><input aria-label="Volume" type="range" min="0" max="100" step="1"><output></output></div>
     <div class="speakers"></div><div class="details"></div><div class="error" role="alert"></div></dialog>`;
@@ -163,7 +181,10 @@ class SpeakerCard extends HTMLElement {
   }
   update() {
     if (!this.config || !this._hass) return;
+    this.resolvePlayback();
     const root = this.shadowRoot, state = this.primary, attrs = state?.attributes || {};
+    root.querySelector(".source").textContent = this.config.playback_entities?.length
+      ? attrs.friendly_name || this.playbackId : "";
     const groupActive = [state, ...this.config.speakers.map((_, index) => this.speakerState(index))].some(active) ||
       displayActive(this._hass.states[this.config.television]);
     const missing = this.config.speakers.filter((_, index) => !available(this.speakerState(index))).length;
@@ -217,7 +238,7 @@ class SpeakerCard extends HTMLElement {
     this.shadowRoot.querySelector(".error").textContent = "";
     this.update();
     try {
-      await this._hass.callService("media_player", service, { ...data, entity_id: service.startsWith("volume_") ? this.volumeId : this.config.entity });
+      await this._hass.callService("media_player", service, { ...data, entity_id: service.startsWith("volume_") ? this.volumeId : this.playbackId });
     } catch (error) {
       this.shadowRoot.querySelector(".error").textContent = error?.message || String(error);
       if (!this.shadowRoot.querySelector("dialog").open) this.shadowRoot.querySelector("dialog").showModal();

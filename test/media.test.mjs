@@ -109,3 +109,34 @@ test("playing audio or an enabled display activates the group; paused audio stay
   assert.equal(card.shadowRoot.querySelectorAll(".speaker.active").length, 0);
   assert.equal(card.volumeId, "media_player.main");
 });
+
+test("playback controls follow MA, retain paused source and return to Apple TV", async () => {
+  const { card, calls } = setup("apple-theater-card", {
+    playback_entities: ["media_player.ma_room", "media_player.left"],
+    volume_entity: "media_player.left"
+  });
+  card._hass.states["media_player.main"].state = "off";
+  card._hass.states["media_player.ma_room"] = { state: "playing",
+    attributes: { supported_features: 16445, volume_level: .1, media_title: "Music", friendly_name: "Bedroom" } };
+  card.update();
+  assert.equal(card.playbackId, "media_player.ma_room");
+  assert.equal(card.shadowRoot.querySelector(".now .media").textContent, "Music");
+  await card.command("media_pause");
+  card._hass.states["media_player.ma_room"].state = "paused";
+  card.update();
+  await card.command("media_play");
+  await card.command("volume_set", { volume_level: .12 });
+  assert.deepEqual(calls.map(c => c[2].entity_id), Array(3).fill("media_player.ma_room"));
+  card._hass.states["media_player.main"].state = "playing";
+  card.update();
+  assert.equal(card.playbackId, "media_player.main");
+  assert.equal(card.volumeId, "media_player.left");
+  card._hass.states["media_player.main"].state = "off";
+  card._hass.states["media_player.ma_room"].state = "unavailable";
+  card._hass.states["media_player.left"] = { state: "playing", attributes: { supported_features: 1 } };
+  card.update();
+  assert.equal(card.playbackId, "media_player.left");
+  await card.command("media_pause");
+  assert.equal(calls.at(-1)[2].entity_id, "media_player.left");
+  assert.throws(() => card.setConfig({ ...card.config, playback_entities: ["switch.bad"] }), /playback_entities/);
+});

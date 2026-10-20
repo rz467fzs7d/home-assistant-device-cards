@@ -28,8 +28,16 @@ Tap to open a two-column panel with independent outlet controls.
 
 Each has a visual editor. The tile opens playback, volume and member status.
 Unsupported controls are hidden; unknown volume is never presented as zero.
-Commands go to **one explicitly selected primary player**, never all members.
-Volume defaults to that player, or can target a separate `volume_entity`.
+Commands go to **one player**, never blindly to all members.
+By default this is the configured `entity`, with an optional `volume_entity`.
+To follow other sources, set `playback_entities` to an ordered list of additional
+controllable HA media players (for example a Music Assistant room and native HomePods).
+The first playing/buffering source wins, with the primary checked first.
+A paused source is retained for resume; otherwise the first paused source is used,
+falling back to the primary. Alternate sources use their own volume control;
+`volume_entity` applies only to the primary. The dialog identifies the selected player.
+Controls remain limited by what the selected HA integration actually supports;
+an activity status alone does not guarantee control over every external AirPlay source.
 Member buttons open native HA details.
 
 The combined icon is active when a player or speaker is `playing` or `buffering`,
@@ -59,6 +67,9 @@ name: Home Theater
 entity: media_player.theater_apple_tv
 volume_entity: media_player.theater_audio
 television: media_player.theater_tv
+playback_entities:
+  - media_player.music_assistant_theater
+  - media_player.theater_audio
 model: homepod
 speakers:
   - media_player.front_left

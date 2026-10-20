@@ -47,6 +47,10 @@ class SpeakerEditor extends HTMLElement {
     input.onchange = () => this.emit({ name: input.value }); label.append(input);
     root.append(label, this.entityField("Primary player", this.config.entity, value => this.emit({ entity: value })),
       this.entityField("Volume player (optional)", this.config.volume_entity, value => this.emit({ volume_entity: value })));
+    const playback = this.entityField("Additional Playback Sources (optional)",
+      this.config.playback_entities || [], value => this.emit({ playback_entities: value || [] }));
+    playback.selector = { entity: { domain: "media_player", multiple: true } };
+    root.append(playback);
     const theater = this.config.type === "custom:apple-theater-card";
     const general = this.config.type === "custom:general-speaker-stereo-card";
     if (!general) root.append(this.selectField("Speaker model", "model",
