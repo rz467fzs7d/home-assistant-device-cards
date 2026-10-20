@@ -90,7 +90,8 @@ class PowerStripCard extends HTMLElement {
       button.querySelector(".state").textContent = !available ? "Unavailable" : state === "on" ? "On" : "Off";
     });
     const off = this.config.entities.length - on - unavailable;
-    const summary = `${on} On · ${off} Off${unavailable ? ` · ${unavailable} unavailable` : ""}`;
+    const summary = [[on, "On"], [off, "Off"], [unavailable, "unavailable"]]
+      .filter(([count]) => count > 0).map(([count, label]) => `${count} ${label}`).join(" · ");
     this.shadowRoot.querySelectorAll(".summary").forEach(node => { node.textContent = summary; });
     this.shadowRoot.querySelector(".entry").classList.toggle("active", on > 0);
   }

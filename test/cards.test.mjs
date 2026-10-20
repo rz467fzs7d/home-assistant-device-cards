@@ -30,6 +30,18 @@ test("counts, unavailable and embedded icon", () => {
   assert.match(decodeURIComponent(iconUrl.split(",")[1]), /<svg/);
   assert.match(decodeURIComponent(iconUrl.split(",")[1]), /<\/svg>/);
 });
+test("summary hides zero counts in both tile and dialog", () => {
+  const { card } = setup();
+  for (const [state, expected] of [["on", "3 On"], ["off", "3 Off"], ["unavailable", "3 unavailable"]]) {
+    card.hass = { states: Object.fromEntries(["switch.one", "light.two", "switch.missing"]
+      .map(id => [id, { state }])) };
+    for (const summary of card.shadowRoot.querySelectorAll(".summary")) {
+      assert.equal(summary.textContent, expected);
+    }
+  }
+  card.hass = { states: { "switch.one": { state: "on" }, "light.two": { state: "on" } } };
+  assert.equal(card.shadowRoot.querySelector(".summary").textContent, "2 On · 1 unavailable");
+});
 test("individual controls, service errors, confirmation and duplicate protection", async () => {
   const { window, card, calls } = setup();
   await card.toggle({ entity: "switch.one" });
