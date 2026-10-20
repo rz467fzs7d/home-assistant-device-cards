@@ -33,17 +33,20 @@ try {
     await page.locator("apple-theater-card .entry").click();
     const colors = await page.evaluate(() => {
       const card = document.querySelector("apple-theater-card");
+      card.style.setProperty("--state-media_player-active-color", "#ff9800");
+      card.style.setProperty("--state-inactive-color", "#888888");
       card._hass.states["media_player.main"].state = "off";
-      card._hass.states["media_player.speaker_1"].state = "paused";
+      card._hass.states["media_player.speaker_1"].state = "off";
       card.update();
       const root = card.shadowRoot;
-      const colors = [root.querySelector(".pair ha-icon"), ...root.querySelector(".pair").querySelectorAll("i")].map(el => getComputedStyle(el).color);
+      const colors = [root.querySelector(".tile .art"), ...root.querySelectorAll(".speaker-art")].map(el => getComputedStyle(el).color);
       card._hass.states["media_player.main"].state = "playing";
       card.update();
       return colors;
     });
-    assert.notEqual(colors[0], colors[1], "playing left speaker differs from idle TV");
-    assert.equal(colors[0], colors[2], "paused right speaker stays gray");
+    assert.equal(colors[0], "rgb(255, 152, 0)", "group uses HA theme active color");
+    assert.equal(colors[0], colors[1], "enabled member and group share active color");
+    assert.equal(colors[2], "rgb(136, 136, 136)", "off speaker uses HA theme inactive color");
     await page.screenshot({ path: `test-results/theater-${width}.png` });
     assert.equal(await page.locator("apple-theater-card dialog .speaker").count(), 4);
     const rect = await page.locator("apple-theater-card dialog").boundingBox();
@@ -51,7 +54,7 @@ try {
     const slider = await page.locator("apple-theater-card dialog input").boundingBox();
     assert.ok(Math.abs(slider.x + slider.width / 2 - (rect.x + rect.width / 2)) < 1, "volume slider remains centered without mute");
     assert.ok((await page.locator("apple-theater-card .now").boundingBox()).height >= 64);
-    assert.equal(await page.locator("apple-theater-card dialog .speaker small").nth(1).textContent(), "Paused");
+    assert.equal(await page.locator("apple-theater-card dialog .speaker small").nth(1).textContent(), "Off");
     await page.locator('apple-theater-card dialog [aria-label="Pause"]').click();
     assert.equal(await page.evaluate(() => window.calls.length), 1);
     assert.equal(await page.evaluate(() => window.calls[0][2].entity_id), "media_player.main");

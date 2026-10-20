@@ -83,23 +83,29 @@ test("editor exposes filtered entity selectors and theater layout", () => {
   assert.equal(editor.shadowRoot.querySelector(".channels ha-selector").label, "Front left");
 });
 
-test("theater icons follow each device independently, including MA activity", () => {
+test("any enabled member activates the group; member states remain independent", () => {
   const { card } = setup("apple-theater-card", {
+    television: "media_player.tv",
     speaker_state_entities: ["media_player.ma_left", "media_player.ma_right"]
   });
   card._hass.states["media_player.main"].state = "off";
-  card._hass.states["media_player.ma_left"] = { state: "playing" };
-  card._hass.states["media_player.ma_right"] = { state: "paused" };
+  card._hass.states["media_player.ma_right"] = { state: "standby" };
+  const art = card.shadowRoot.querySelector(".tile .art");
+  for (const state of ["on", "idle", "paused", "buffering", "playing"]) {
+    card._hass.states["media_player.ma_left"] = { state };
+    card.update();
+    assert.equal(art.classList.contains("active"), true, state);
+    assert.equal(card.shadowRoot.querySelectorAll(".speaker.active").length, 1);
+    assert.match(card.shadowRoot.querySelector(".tile .summary").textContent, /^On/);
+  }
+  for (const state of ["off", "standby", "unknown", "unavailable"]) {
+    card._hass.states["media_player.ma_left"] = { state };
+    card.update();
+    assert.equal(art.classList.contains("active"), false, state);
+  }
+  card._hass.states["media_player.tv"] = { state: "on" };
   card.update();
-  const pair = card.shadowRoot.querySelector(".tile .pair");
-  assert.equal(pair.querySelector("ha-icon").classList.contains("playing"), false);
-  assert.equal(pair.querySelectorAll("i")[0].classList.contains("playing"), true);
-  assert.equal(pair.querySelectorAll("i")[1].classList.contains("playing"), false);
-  assert.equal(card.shadowRoot.querySelector(".speaker small").textContent, "Playing");
-  card._hass.states["media_player.ma_left"].state = "paused";
-  card._hass.states["media_player.main"].state = "playing";
-  card.update();
-  assert.equal(pair.querySelector("ha-icon").classList.contains("playing"), true);
-  assert.equal(pair.querySelectorAll("i.playing").length, 0);
+  assert.equal(art.classList.contains("active"), true, "physical display activates group");
+  assert.equal(card.shadowRoot.querySelectorAll(".speaker.active").length, 0);
   assert.equal(card.volumeId, "media_player.main");
 });

@@ -9,6 +9,8 @@ const TYPES = {
   "general-speaker-stereo-card": "Speaker Stereo"
 };
 const available = state => state && !["unknown", "unavailable"].includes(state.state);
+// Match HA's media-player active-state semantics, including idle and paused.
+const active = state => Boolean(state?.state && available(state) && !["off", "standby"].includes(state.state));
 const stateLabel = state => (state?.state || "unavailable").replaceAll("_", " ").replace(/\b[a-z]/g, letter => letter.toUpperCase());
 const mediaEntity = id => typeof id === "string" && /^media_player\.[a-z0-9_]+$/.test(id);
 
@@ -78,8 +80,8 @@ class SpeakerCard extends HTMLElement {
       button:focus-visible,input:focus-visible{outline:2px solid var(--primary-color);outline-offset:2px}
       .tile{height:66px;display:flex;align-items:center;border:1px solid var(--divider-color,#ddd);border-radius:8px;background:var(--ha-card-background,var(--card-background-color,#fff));padding-right:8px}
       .entry{flex:1;min-width:0;height:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;border:0;background:none;text-align:left}
-      .art{width:36px;height:36px;flex:none;color:var(--secondary-text-color);display:grid;place-items:center}
-      .art>ha-icon.playing,.pair .playing{color:var(--primary-color)}
+      .art{width:36px;height:36px;flex:none;color:var(--state-media_player-inactive-color,var(--state-inactive-color,var(--secondary-text-color)));display:grid;place-items:center}
+      .art.active{color:var(--state-media_player-active-color,var(--state-active-color,var(--primary-color)))}
       .art>ha-icon{--mdc-icon-size:28px}.pair{display:block;width:36px;height:36px;position:relative;transform:scale(.85)}
       .pair i{position:absolute;width:25px;height:30px;background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
       .pair i:first-of-type{left:-2px;top:0;opacity:.55}.pair i:nth-of-type(2){right:-2px;bottom:0}
@@ -100,9 +102,9 @@ class SpeakerCard extends HTMLElement {
       output{grid-column:3;grid-row:1;font-size:12px;text-align:center}
       .speakers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border-top:1px solid var(--divider-color,#ddd);padding-top:16px}
       .speaker{border:0;background:none;text-align:center;padding:14px 4px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}.speaker span{display:block;font-size:13px;overflow-wrap:anywhere}.speaker small{display:block;color:var(--secondary-text-color)}
-      .speaker-art{display:block;width:40px;height:40px;margin-bottom:4px;color:var(--secondary-text-color)}
+      .speaker-art{display:block;width:40px;height:40px;margin-bottom:4px;color:var(--state-media_player-inactive-color,var(--state-inactive-color,var(--secondary-text-color)))}
       .speaker-art.homepod{background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
-      .speaker-art ha-icon{--mdc-icon-size:40px}.speaker.playing .speaker-art{color:var(--primary-color)}.speaker.unavailable .speaker-art{opacity:.4}
+      .speaker-art ha-icon{--mdc-icon-size:40px}.speaker.active .speaker-art{color:var(--state-media_player-active-color,var(--state-active-color,var(--primary-color)))}.speaker.unavailable .speaker-art{color:var(--state-unavailable-color,var(--secondary-text-color));opacity:.4}
       .unavailable small{color:var(--error-color,#db4437)}.error{color:var(--error-color,#db4437);font-size:13px;overflow-wrap:anywhere}.error:empty{display:none}
       .details{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}[hidden]{display:none!important}
     </style>
@@ -162,26 +164,24 @@ class SpeakerCard extends HTMLElement {
   update() {
     if (!this.config || !this._hass) return;
     const root = this.shadowRoot, state = this.primary, attrs = state?.attributes || {};
+    const groupActive = [state, this._hass.states[this.config.television],
+      ...this.config.speakers.map((_, index) => this.speakerState(index))].some(active);
     const missing = this.config.speakers.filter((_, index) => !available(this.speakerState(index))).length;
     const volume = this.volume?.attributes?.volume_level;
     root.querySelectorAll(".summary").forEach(el => { el.textContent =
       `${stateLabel(state)}${typeof volume === "number" ? ` · ${Math.round(volume * 100)}%` : ""}${missing ? ` · ${missing} Unavailable` : ""}`; });
     root.querySelectorAll(".media").forEach(el => { el.textContent = ["playing", "paused", "buffering"].includes(state?.state) ? attrs.media_title || "" : ""; });
     root.querySelector(".artist").textContent = ["playing", "paused", "buffering"].includes(state?.state) ? attrs.media_artist || attrs.app_name || "" : "";
-    root.querySelector(".tile").classList.toggle("active", state?.state === "playing");
-    root.querySelectorAll(".art>ha-icon,.pair>ha-icon").forEach(el => {
-      el.classList.toggle("playing", state?.state === "playing");
-    });
-    root.querySelectorAll(".pair").forEach(pair => {
-      pair.querySelectorAll("i").forEach((icon, index) => {
-        icon.classList.toggle("playing", this.speakerState(index)?.state === "playing");
-      });
-    });
+    if (groupActive && !active(state)) {
+      root.querySelector(".tile .summary").textContent = `On${missing ? ` · ${missing} Unavailable` : ""}`;
+    }
+    root.querySelector(".tile").classList.toggle("active", groupActive);
+    root.querySelectorAll(".art").forEach(el => el.classList.toggle("active", groupActive));
     root.querySelectorAll(".speaker").forEach((el, index) => {
       const speaker = this.speakerState(index);
       el.querySelector("small").textContent = stateLabel(speaker);
       el.classList.toggle("unavailable", !available(speaker));
-      el.classList.toggle("playing", speaker?.state === "playing");
+      el.classList.toggle("active", active(speaker));
     });
     root.querySelector(".speakers").hidden = !this.config.speakers.length;
     root.querySelectorAll("[data-action]").forEach(button => {
