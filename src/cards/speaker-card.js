@@ -71,8 +71,8 @@ class SpeakerCard extends HTMLElement {
       .art>ha-icon{--mdc-icon-size:32px}.pair{display:block;width:36px;height:36px;position:relative}
       .pair i{position:absolute;width:25px;height:30px;background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
       .pair i:first-of-type{left:-2px;top:0;opacity:.55}.pair i:nth-of-type(2){right:-2px;bottom:0}
-      .theater ha-icon{position:absolute;top:0;left:4px;--mdc-icon-size:28px}
-      .theater i{width:15px;height:19px}.theater i:first-of-type{top:16px;left:-3px;opacity:1}.theater i:nth-of-type(2){bottom:1px;right:-3px}
+      .theater ha-icon{position:absolute;top:-3px;left:4px;--mdc-icon-size:28px}
+      .theater i{width:21px;height:25px}.theater i:first-of-type{top:12px;left:-5px;opacity:1}.theater i:nth-of-type(2){bottom:-1px;right:-5px}
       .theater i:nth-of-type(3){top:0;left:-6px;opacity:.55}.theater i:nth-of-type(4){top:0;right:-6px;opacity:.55}
       .text{min-width:0}.name{font-size:14px;font-weight:500}.summary,.media{font-size:12px;color:var(--secondary-text-color);margin-top:3px}
       .text>*{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.text .media:empty{display:none}
@@ -84,7 +84,10 @@ class SpeakerCard extends HTMLElement {
       .transport{display:flex;justify-content:center;gap:20px;margin:20px 0}.transport .icon-button{width:48px;height:48px}
       .volume{display:flex;align-items:center;gap:12px;margin:16px 0}.volume input{min-width:0;flex:1;accent-color:var(--primary-color)}output{font-size:12px;min-width:36px;text-align:right}
       .speakers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border-top:1px solid var(--divider-color,#ddd);padding-top:16px}
-      .speaker{border:0;background:none;text-align:left;padding:10px 4px;min-width:0}.speaker span{display:block;font-size:13px;overflow-wrap:anywhere}.speaker small{display:block;color:var(--secondary-text-color);margin-top:4px}
+      .speaker{border:0;background:none;text-align:center;padding:14px 4px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}.speaker span{display:block;font-size:13px;overflow-wrap:anywhere}.speaker small{display:block;color:var(--secondary-text-color)}
+      .speaker-art{display:block;width:48px;height:48px;margin-bottom:4px;color:var(--secondary-text-color)}
+      .speaker-art.homepod{background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
+      .speaker-art ha-icon{--mdc-icon-size:48px}.speaker.playing .speaker-art{color:var(--primary-color)}.speaker.unavailable .speaker-art{opacity:.4}
       .unavailable small{color:var(--error-color,#db4437)}.error{color:var(--error-color,#db4437);font-size:13px;overflow-wrap:anywhere}.error:empty{display:none}
       .details{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}[hidden]{display:none!important}
     </style>
@@ -122,7 +125,9 @@ class SpeakerCard extends HTMLElement {
     this.config.speakers.forEach((id, index) => {
       const button = document.createElement("button");
       button.className = "speaker";
-      button.innerHTML = "<span></span><small></small>";
+      button.innerHTML = this.constructor.cardType === "general-speaker-stereo-card"
+        ? '<i class="speaker-art" aria-hidden="true"><ha-icon icon="mdi:speaker"></ha-icon></i><span></span><small></small>'
+        : '<i class="speaker-art homepod" aria-hidden="true"></i><span></span><small></small>';
       button.querySelector("span").textContent = positions[index];
       button.title = id;
       button.onclick = () => this.moreInfo(id);
@@ -153,6 +158,7 @@ class SpeakerCard extends HTMLElement {
       const speaker = this._hass.states[this.config.speakers[index]];
       el.querySelector("small").textContent = stateLabel(speaker);
       el.classList.toggle("unavailable", !available(speaker));
+      el.classList.toggle("playing", speaker?.state === "playing");
     });
     root.querySelector(".speakers").hidden = !this.config.speakers.length;
     root.querySelectorAll("[data-action]").forEach(button => {

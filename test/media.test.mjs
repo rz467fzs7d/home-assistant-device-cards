@@ -25,6 +25,7 @@ test("registers three cards, shows media safely and reports individual availabil
     assert.equal(card.shadowRoot.querySelectorAll("song").length, 0);
     assert.match(card.shadowRoot.querySelector(".summary").textContent, /1 unavailable/);
     assert.equal(card.shadowRoot.querySelectorAll(".speaker").length, 2);
+    assert.equal(card.shadowRoot.querySelectorAll(".speaker .speaker-art").length, 2);
   }
 });
 test("controls target only primary; volume can target a different entity", async () => {
