@@ -20,6 +20,7 @@ test("original appliance outline is shared by tile, title and dialog without ser
   for (const kind of ["air-fryer", "pressure-cooker"]) {
     const { card, calls, state } = setup(kind, kind === "air-fryer" ? "Standby" : "Idle");
     const tile = card.shadowRoot.querySelector(".entry svg").innerHTML;
+    assert.ok(card.shadowRoot.querySelector(".entry svg").children.length <= 2, "appliance icons stay symbolic, without panels or buttons");
     assert.equal(tile, card.shadowRoot.querySelector("header svg").innerHTML);
     assert.equal(tile, card.shadowRoot.querySelector(".machine svg").innerHTML);
     assert.equal(card.shadowRoot.querySelector('.entry ha-icon'), null);
