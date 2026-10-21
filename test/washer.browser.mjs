@@ -13,12 +13,16 @@ try {
     await page.evaluate(() => {
       window.calls = [];
       const card = document.createElement("washer-card"); window.washer = card;
-      card.setConfig({ state_entity: "sensor.washer", operation_entity: "select.operation", remote_start_entity: "binary_sensor.remote", finish_entity: "sensor.finish", delay_entity: "number.delay" });
+      card.setConfig({ state_entity: "sensor.washer", operation_entity: "select.operation", remote_start_entity: "binary_sensor.remote", finish_entity: "sensor.finish", delay_entity: "number.delay", delay_min: 3, total_time_entity: "sensor.total", cycles_entity: "sensor.cycles", notification_entity: "event.notification", error_entity: "event.error" });
       const states = {
         "sensor.washer": { state: "sleep" }, "binary_sensor.remote": { state: "on" },
         "select.operation": { state: "unknown", attributes: { options: ["wake_up", "start", "stop"] } },
         "sensor.finish": { state: new Date(Date.now() + 3600000).toISOString() },
-        "number.delay": { state: "0", attributes: { min: 0, max: 19, step: 1, unit_of_measurement: "h" } }
+        "number.delay": { state: "0", attributes: { min: 0, max: 19, step: 1, unit_of_measurement: "h" } },
+        "sensor.total": { state: "80", attributes: { unit_of_measurement: "min" } },
+        "sensor.cycles": { state: "14" },
+        "event.notification": { state: "2026-01-01T08:00:00Z", attributes: { event_type: "washing_is_complete" } },
+        "event.error": { state: "unknown", attributes: { event_type: "door_open_error" } }
       };
       const hass = { states, callService: async (...args) => {
         window.calls.push(args);
@@ -31,6 +35,7 @@ try {
     });
     await page.locator("washer-card .entry").click();
     assert.equal(await page.locator("washer-card dialog").evaluate(el => el.open), true);
+    assert.equal(await page.locator("washer-card .facts").innerText().then(text => text.includes("Door")), false);
     await page.screenshot({ path: `test-results/washer-ready-${width}.png` });
     assert.equal(await page.locator("washer-card .stop").isDisabled(), true);
     await page.locator("washer-card .start").click();
@@ -39,6 +44,7 @@ try {
     assert.deepEqual(await page.evaluate(() => window.calls.map(c => c[2].option)), ["wake_up", "start"]);
     assert.equal(await page.locator("washer-card select").isDisabled(), true);
     await page.screenshot({ path: `test-results/washer-running-${width}.png` });
+    if (width === 390) await page.locator("washer-card dialog").screenshot({ path: "test-results/washer-controls.png" });
     const bounds = await page.locator("washer-card dialog").boundingBox();
     assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= width);
     assert.ok(await page.evaluate(() => {
@@ -50,6 +56,15 @@ try {
     await page.locator("washer-card .stop").click();
     assert.equal(await page.locator("washer-card .start").isDisabled(), false);
     assert.equal(await page.locator("washer-card .stop").isDisabled(), true);
+    await page.evaluate(() => {
+      const card = window.washer;
+      card._hass.states["sensor.washer"].state = "power_off";
+      card._hass.states["binary_sensor.remote"].state = "off";
+      card.update();
+    });
+    assert.equal(await page.locator("washer-card .start").isDisabled(), true);
+    assert.equal(await page.locator("washer-card select").isDisabled(), true);
+    assert.ok((await page.locator("washer-card .hint").textContent()).includes("Turn on the washer"));
     await page.keyboard.press("Escape");
     assert.equal(await page.locator("washer-card dialog").evaluate(el => el.open), false);
     assert.deepEqual(errors, []);

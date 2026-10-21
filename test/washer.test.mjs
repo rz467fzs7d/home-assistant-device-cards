@@ -8,7 +8,7 @@ function setup(status = "sleep", remote = "on") {
   const window = new Window(); window.eval(bundle);
   const card = window.document.createElement("washer-card");
   window.document.body.append(card);
-  card.setConfig({ state_entity: "sensor.washer_status", operation_entity: "select.washer_operation", remote_start_entity: "binary_sensor.remote", delay_entity: "number.delay", finish_entity: "sensor.finish", timeout: .04 });
+  card.setConfig({ state_entity: "sensor.washer_status", operation_entity: "select.washer_operation", remote_start_entity: "binary_sensor.remote", delay_entity: "number.delay", delay_min: 3, finish_entity: "sensor.finish", total_time_entity: "sensor.total", cycles_entity: "sensor.cycles", scheduled_finish_entity: "sensor.scheduled", error_entity: "event.error", notification_entity: "event.notification", timeout: .06 });
   const calls = [];
   const hass = {
     states: {
@@ -17,8 +17,16 @@ function setup(status = "sleep", remote = "on") {
       "binary_sensor.remote": { state: remote },
       "number.delay": { state: "0", attributes: { min: 0, max: 19, step: 1, unit_of_measurement: "h" } },
       "sensor.finish": { state: new Date(Date.now() + 3600000).toISOString() },
+      "sensor.scheduled": { state: new Date(Date.now() + 10800000).toISOString() },
+      "sensor.total": { state: "80", attributes: { unit_of_measurement: "min" } },
+      "sensor.cycles": { state: "14" },
+      "event.error": { state: "unknown", attributes: { event_type: "door_open_error" } },
+      "event.notification": { state: "2026-01-02T08:30:00Z", attributes: { event_type: "washing_is_complete" } },
     },
-    callService: async (...args) => { calls.push(args); }
+    callService: async (...args) => {
+      calls.push(args);
+      if (args[0] === "number") { hass.states[args[2].entity_id].state = String(args[2].value); card.hass = hass; }
+    }
   };
   const state = (value, enabled = remote) => {
     hass.states["sensor.washer_status"].state = value;
@@ -60,11 +68,11 @@ test("ready device starts directly; Stop waits for status readback", async () =>
 
 test("wake failure, remote disabled and timeout never fall through to Start", async () => {
   for (const mode of ["cloud", "timeout", "remote"]) {
-    const { card, calls, hass } = setup(mode === "remote" ? "initial" : "power_off", "off");
+    const { card, calls, hass } = setup(mode === "remote" ? "initial" : "sleep", "off");
     if (mode === "cloud") hass.callService = async (...args) => { calls.push(args); throw new Error("LG cloud unavailable"); };
     await card.operate();
     assert.ok(calls.every(c => c[2].option === "wake_up"));
-    assert.match(card.shadowRoot.querySelector(".message").textContent, mode === "cloud" ? /LG cloud/ : mode === "timeout" ? /timed out/ : /Enable Remote Start/);
+    assert.match(card.shadowRoot.querySelector(mode === "remote" ? ".hint" : ".message").textContent, mode === "cloud" ? /LG cloud/ : mode === "timeout" ? /timed out/ : /Enable Remote Start/);
     assert.equal(card.busy, "");
   }
 });
@@ -86,12 +94,83 @@ test("unavailable/error states disable controls; delay uses number entity and is
   assert.equal(card.shadowRoot.querySelector(".primary").disabled, true);
   await card.operate(); assert.equal(calls.length, 0);
   state("initial");
-  assert.equal(card.shadowRoot.querySelectorAll("select option").length, 20);
+  assert.equal(card.shadowRoot.querySelectorAll("select option").length, 18);
+  await card.setDelay("0"); await card.setDelay("1"); await card.setDelay("2");
+  assert.equal(calls.length, 0, "read-only zero and out-of-profile values must not be sent");
   await card.setDelay("3");
   assert.deepEqual(JSON.parse(JSON.stringify(calls[0])), ["number", "set_value", { entity_id: "number.delay", value: 3 }]);
   state("running"); await card.setDelay("4"); assert.equal(calls.length, 1);
   assert.equal(card.shadowRoot.querySelector("select").disabled, true);
   state("error"); assert.equal(card.shadowRoot.querySelector(".primary").disabled, true);
+});
+
+test("Off and Finished require appliance preparation, with no speculative wake or start", async () => {
+  const { card, calls, state } = setup("power_off", "off");
+  await card.operate(false);
+  assert.deepEqual(calls, []);
+  assert.match(card.shadowRoot.querySelector(".hint").textContent, /Turn on the washer/);
+  assert.equal(card.shadowRoot.querySelector(".stop").disabled, true);
+  assert.equal(card.shadowRoot.querySelector("select").disabled, true);
+  state("end", "on"); await card.operate(false);
+  assert.deepEqual(calls, []);
+  assert.match(card.shadowRoot.querySelector(".hint").textContent, /next load/);
+});
+
+test("scheduled and rinse hold have distinct display and mutually exclusive controls", () => {
+  const { card, state } = setup("reserved");
+  assert.equal(card.active, false);
+  assert.equal(card.shadowRoot.querySelector(".entry").classList.contains("active"), false);
+  assert.equal(card.shadowRoot.querySelector(".start").disabled, true);
+  assert.equal(card.shadowRoot.querySelector(".stop").disabled, false);
+  assert.match(card.shadowRoot.querySelector(".finish").textContent, /Scheduled Finish/);
+  assert.ok(!card.shadowRoot.querySelector(".finish").textContent.includes("Min"));
+  state("rinse_hold");
+  assert.equal(card.active, false);
+  assert.equal(card.shadowRoot.querySelector(".start").disabled, false);
+  assert.equal(card.shadowRoot.querySelector(".stop").disabled, true);
+  assert.equal(card.shadowRoot.querySelector(".finish").textContent, "");
+});
+
+test("Start is confirmed by reserved state when delay is configured", async () => {
+  const { card, hass, state } = setup("initial");
+  hass.callService = async () => state("reserved");
+  await card.operate(false);
+  assert.equal(card.shadowRoot.querySelector(".message").textContent, "");
+  assert.equal(card.shadowRoot.querySelector(".stop").disabled, false);
+});
+
+test("facts show valid data and dated history; event metadata never becomes a live door alert", () => {
+  const { card, state, hass } = setup("initial");
+  let text = card.shadowRoot.querySelector(".facts").textContent;
+  assert.match(text, /Cycle Duration80 min/);
+  assert.match(text, /Wash Cycles14/);
+  assert.match(text, /Last NotificationWashing Is Complete/);
+  assert.ok(!text.includes("Door") && !text.includes("Last Error"));
+  state("power_off");
+  assert.ok(!card.shadowRoot.querySelector(".facts").textContent.includes("Cycle Duration"));
+  hass.states["event.error"].state = "2026-01-01T10:00:00Z"; card.hass = hass;
+  assert.match(card.shadowRoot.querySelector(".facts").textContent, /Last ErrorDoor Open Error/);
+  assert.equal(card.shadowRoot.querySelector(".status").textContent, "Off");
+  hass.states["event.error"].state = "0"; card.hass = hass;
+  assert.ok(!card.shadowRoot.querySelector(".facts").textContent.includes("Last Error"));
+  hass.states["sensor.cycles"].state = "unavailable";
+  hass.states["event.notification"].state = "unknown"; card.hass = hass;
+  assert.equal(card.shadowRoot.querySelector(".facts").textContent, "");
+});
+
+test("delay waits for readback, surfaces errors and never claims success from a service acknowledgment", async () => {
+  const { card, calls, hass } = setup("initial");
+  hass.callService = async (...args) => { calls.push(args); };
+  const result = card.setDelay("3"); await tick();
+  assert.equal(card.shadowRoot.querySelector(".start").disabled, true);
+  assert.equal(card.shadowRoot.querySelector(".stop").disabled, true);
+  assert.equal(card.shadowRoot.querySelector("select").value, "0");
+  await result;
+  assert.match(card.shadowRoot.querySelector(".message").textContent, /not confirmed/);
+  assert.equal(hass.states["number.delay"].state, "0");
+  hass.callService = async () => { throw new Error("Service rejected"); };
+  await card.setDelay("4");
+  assert.equal(card.shadowRoot.querySelector(".message").textContent, "Service rejected");
 });
 
 test("cancelling during readiness wait removes observers and prevents a later Start", async () => {

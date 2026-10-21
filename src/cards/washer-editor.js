@@ -14,13 +14,23 @@ class WasherEditor extends HTMLElement {
       ["state_entity", "Status", ["sensor"]], ["operation_entity", "Operation", ["select"]],
       ["remote_start_entity", "Remote Start (optional)", ["binary_sensor"]],
       ["finish_entity", "Estimated Finish (optional)", ["sensor"]],
-      ["delay_entity", "Delay (optional)", ["number", "input_select"]]
+      ["delay_entity", "Delay (optional)", ["number", "input_select"]],
+      ["scheduled_finish_entity", "Scheduled Finish (optional)", ["sensor"]],
+      ["total_time_entity", "Cycle Duration (optional)", ["sensor"]],
+      ["cycles_entity", "Wash Cycles (optional)", ["sensor"]],
+      ["notification_entity", "Last Notification (optional)", ["event"]],
+      ["error_entity", "Last Error (optional)", ["event"]]
     ]) {
       const selector = document.createElement("ha-selector"); selector.hass = this._hass;
       selector.selector = { entity: { domain } }; selector.label = title; selector.value = this.config[key];
       selector.addEventListener("value-changed", event => { event.stopPropagation(); this.change(key, event.detail.value); });
       this.shadowRoot.append(selector);
     }
+    const minimum = document.createElement("label"); minimum.textContent = "Minimum Delay Hours (optional)";
+    const number = document.createElement("input"); number.type = "number"; number.min = "0"; number.step = "1";
+    number.value = this.config.delay_min ?? "";
+    number.onchange = () => this.change("delay_min", number.value === "" ? undefined : Number(number.value));
+    minimum.append(number); this.shadowRoot.append(minimum);
   }
 }
 if (!customElements.get("washer-card-editor")) customElements.define("washer-card-editor", WasherEditor);
