@@ -35,7 +35,7 @@ try {
     if (width === 390) await page.locator(`${kind}-card dialog`).screenshot({ path: `test-results/${kind}-controls.png` });
     const bounds = await page.locator(`${kind}-card dialog`).boundingBox(); assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= width);
     assert.ok(await page.evaluate(() => window.card.shadowRoot.querySelector("dialog").scrollWidth <= window.card.shadowRoot.querySelector("dialog").clientWidth));
-    assert.ok(await page.locator(`${kind}-card .machine`).evaluate(el => el.getBoundingClientRect().height > 100 && getComputedStyle(el.querySelector(".af-body,.rk-body")).backgroundImage !== "none"));
+    assert.ok(await page.locator(`${kind}-card .machine`).evaluate(el => el.getBoundingClientRect().height > 100 && el.querySelector("svg path").getBBox().width > 30 && getComputedStyle(el.querySelector("svg")).fill === "none"));
     page.once("dialog", dialog => dialog.accept()); await page.locator(`${kind}-card .start`).click();
     await page.waitForFunction(() => window.card.active && !window.card.busy);
     assert.equal(await page.locator(`${kind}-card .stop`).isDisabled(), false);

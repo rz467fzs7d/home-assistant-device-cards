@@ -1,12 +1,9 @@
 # Third-party artwork
 
-`src/cards/cooking-art.js`:
-- Source: https://github.com/ADNPolymerase/ha-appliance-card (v2.30.0).
-- MIT License, Copyright (c) 2026 ADNPolymerase.
-- Air fryer, rice cooker and dishwasher HTML/CSS silhouettes adapted for this library's
-  theme and compact dialog. The rice cooker silhouette represents a generic
-  cooker, not a precise model. Device controls are implemented separately.
-- The MIT permission and warranty terms reproduced below apply to this artwork.
+`src/cards/cooking-art.js` contains original SVG outline drawings.
+Versions 0.11 and 0.12 used silhouettes adapted from
+ADNPolymerase/ha-appliance-card v2.30.0 (MIT, Copyright (c) 2026 ADNPolymerase).
+Those silhouettes were replaced with original line art in version 0.13.
 
 `src/assets/powerstrip.svg`:
 - Title: Powerstrip

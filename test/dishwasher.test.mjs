@@ -40,7 +40,25 @@ test("active phase shown, stale idle phase hidden, unknown phase never means doo
   assert.match(card.shadowRoot.querySelector(".summary").textContent, /Rinse/);
   hass.states["sensor.status"].state = "power_off"; card.hass = hass;
   assert.doesNotMatch(card.shadowRoot.querySelector(".summary").textContent, /Rinse/);
-  assert.equal(card.shadowRoot.querySelector(".dw-door").classList.contains("open"), false);
+  assert.equal(card.shadowRoot.querySelector(".dw-door"), null);
+});
+test("sink and cabinet outlines switch together without changing controls", () => {
+  const { card, hass, calls } = setup();
+  const cabinet = card.shadowRoot.querySelector(".entry svg").innerHTML;
+  const config = { ...card.config, icon_variant: "sink" }; card.setConfig(config); card.hass = hass;
+  const sink = card.shadowRoot.querySelector(".entry svg").innerHTML;
+  assert.notEqual(sink, cabinet);
+  assert.equal(sink, card.shadowRoot.querySelector(".machine svg").innerHTML);
+  assert.equal(calls.length, 0);
+  assert.throws(() => card.setConfig({ ...config, icon_variant: "photo" }), /sink or cabinet/);
+});
+test("visual editor emits the selected dishwasher design", () => {
+  const { window } = setup(); const editor = window.document.createElement("cooking-card-editor");
+  editor.setConfig({ type: "custom:dishwasher-card", state_entity: "sensor.status" });
+  let changed; editor.addEventListener("config-changed", event => { changed = event.detail.config; });
+  const select = editor.shadowRoot.querySelector("select"); assert.equal(select.value, "cabinet");
+  select.value = "sink"; select.dispatchEvent(new window.Event("change"));
+  assert.equal(changed.icon_variant, "sink"); assert.equal(changed.state_entity, "sensor.status");
 });
 test("start waits for Running readback and surfaces cloud/service errors", async () => {
   for (const fail of [false, true]) {

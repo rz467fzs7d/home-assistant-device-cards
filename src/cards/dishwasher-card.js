@@ -4,10 +4,11 @@ const label = value => String(value || "Unavailable").replaceAll("_", " ").repla
 
 class DishwasherCard extends CookingCard {
   setConfig(config) {
+    if (config.icon_variant && !["sink", "cabinet"].includes(config.icon_variant)) throw new Error("icon_variant must be sink or cabinet");
     for (const key of ["progress_entity", "mode_entity"]) if (config[key] && !/^sensor\./.test(config[key])) throw new Error(`${key} must be a sensor`);
     if (config.mode_select_entity && !/^select\./.test(config.mode_select_entity)) throw new Error("mode_select_entity must be a select");
     this.selectedProgram = null;
-    super.setConfig({ name: "Dishwasher", ...config });
+    super.setConfig({ name: "Dishwasher", icon_variant: "cabinet", ...config });
   }
   get active() { return ["running", "delay"].includes(this.status); }
   get fault() { return this.status === "error" ? "Device Error" : super.fault; }

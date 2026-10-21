@@ -12,14 +12,16 @@ Screenshots show the actual cards with synthetic demo entities and states.
 ### Dishwasher
 
 `custom:dishwasher-card` uses the same compact tile and dialog as the other
-appliance cards, with a dishwasher silhouette adapted from HA Appliance Card.
+appliance cards, with a theme-aware outline drawing instead of a realistic image.
 Midea AC LAN provides backend entities, not a bundled frontend card.
 
 <img src="docs/images/dishwasher-controls.png" alt="Dishwasher panel with a locally selected program and confirmed Start" width="350">
+<img src="docs/images/dishwasher-sink-controls.png" alt="Sink dishwasher outline variant" width="350">
 
 ```yaml
 type: custom:dishwasher-card
 name: Dishwasher
+icon_variant: cabinet # cabinet or sink
 state_entity: sensor.dishwasher_status
 progress_entity: sensor.dishwasher_progress
 mode_entity: sensor.dishwasher_mode
@@ -27,6 +29,8 @@ mode_select_entity: select.dishwasher_mode_select
 ```
 
 For Midea E1, selecting a program through the integration starts washing.
+The visual editor offers Cabinet and Sink designs; the tile icon, dialog header
+and central outline switch together. This setting never changes device control.
 The card deliberately keeps dropdown edits local: only explicit Start, followed
 by confirmation, calls `select.select_option`. It waits for Running or Delay
 readback. Power Off, unavailable program controls, unknown/error states and
@@ -43,9 +47,9 @@ Browser checks use synthetic entities and never start a real wash.
 ### Air Fryer And Pressure Cooker
 
 `custom:air-fryer-card` and `custom:pressure-cooker-card` open a compact control
-panel from a single status tile. Appliance silhouettes are adapted from
-[HA Appliance Card v2.30.0](https://github.com/ADNPolymerase/ha-appliance-card),
-under MIT; see NOTICE.md. Existing Xiaomi Home entities remain the backend.
+panel from a single status tile. Dialogs use original, unfilled SVG line art
+on a quiet circular background, following the native vacuum control panel.
+Existing Xiaomi Home entities remain the backend.
 
 <img src="docs/images/air-fryer-controls.png" alt="Air fryer controls with temperature and duration" width="350">
 <img src="docs/images/pressure-cooker-controls.png" alt="Pressure cooker controls with program and lid status" width="350">

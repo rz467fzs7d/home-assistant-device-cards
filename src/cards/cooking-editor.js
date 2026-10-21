@@ -3,11 +3,18 @@ class CookingEditor extends HTMLElement {
   set hass(hass) { this._hass = hass; this.shadowRoot?.querySelectorAll("ha-selector").forEach(node => { node.hass = hass; }); }
   change(key, value) { this.config = { ...this.config, [key]: value || undefined }; this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: this.config }, bubbles: true, composed: true })); }
   render() {
-    this.shadowRoot.innerHTML = '<style>:host{display:block}label,ha-selector{display:block;margin-bottom:16px}input,textarea{display:block;width:100%;box-sizing:border-box;padding:10px;font:inherit;color:var(--primary-text-color);background:var(--card-background-color);border:1px solid var(--divider-color);border-radius:4px}</style>';
+    this.shadowRoot.innerHTML = '<style>:host{display:block}label,ha-selector{display:block;margin-bottom:16px}input,textarea,select{display:block;width:100%;box-sizing:border-box;padding:10px;font:inherit;color:var(--primary-text-color);background:var(--card-background-color);border:1px solid var(--divider-color);border-radius:4px}</style>';
     const label = document.createElement("label"); label.textContent = "Name";
     const input = document.createElement("input"); input.value = this.config.name || ""; input.onchange = () => this.change("name", input.value); label.append(input); this.shadowRoot.append(label);
     const fryer = this.config.type === "custom:air-fryer-card";
     const dishwasher = this.config.type === "custom:dishwasher-card";
+    if (dishwasher) {
+      const label = document.createElement("label"); label.textContent = "Dishwasher Design";
+      const select = document.createElement("select"); select.setAttribute("aria-label", "Dishwasher Design");
+      for (const [value, title] of [["sink", "Sink"], ["cabinet", "Cabinet"]]) { const option = document.createElement("option"); option.value = value; option.textContent = title; select.append(option); }
+      select.value = this.config.icon_variant || "cabinet"; select.onchange = () => this.change("icon_variant", select.value);
+      label.append(select); this.shadowRoot.append(label);
+    }
     const fields = [["state_entity", "Status", "sensor"], ["start_entity", "Start", fryer ? "button" : "notify"], ["stop_entity", "Stop", "button"], ["remaining_entity", "Remaining Time", "sensor"], ["fault_entity", "Fault", "sensor"], ["finished_entity", "Last Finished", "event"]];
     if (dishwasher) { fields[1][2] = "button"; fields.push(["progress_entity", "Wash Stage", "sensor"], ["mode_entity", "Current Program", "sensor"], ["mode_select_entity", "Program And Start (Midea E1)", "select"]); }
     else if (fryer) fields.push(["pause_entity", "Pause", "button"], ["resume_entity", "Resume", "button"], ["target_temperature_entity", "Target Temperature", "number"], ["target_time_entity", "Duration", "number"], ["recipe_entity", "Recipe", "text"]);
