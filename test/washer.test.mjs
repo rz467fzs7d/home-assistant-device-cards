@@ -41,7 +41,8 @@ test("Start wakes first and waits for actual readiness and remote permission", a
   assert.equal(calls.length, 1, "must not start with remote disabled");
   state("initial", "on"); await result;
   assert.deepEqual(calls.map(c => c[2].option), ["wake_up", "start"]);
-  assert.equal(card.shadowRoot.querySelector(".primary span").textContent, "Stop");
+  assert.equal(card.shadowRoot.querySelector(".start").disabled, true);
+  assert.equal(card.shadowRoot.querySelector(".stop").disabled, false);
   assert.match(card.shadowRoot.querySelector(".summary").textContent, /Finishes/);
 });
 
@@ -52,7 +53,8 @@ test("ready device starts directly; Stop waits for status readback", async () =>
   window.confirm = () => false; await card.operate(); assert.equal(calls.length, 1);
   window.confirm = () => true; await card.operate();
   assert.deepEqual(calls.map(c => c[2].option), ["start", "stop"]);
-  assert.equal(card.shadowRoot.querySelector(".primary span").textContent, "Start");
+  assert.equal(card.shadowRoot.querySelector(".start").disabled, false);
+  assert.equal(card.shadowRoot.querySelector(".stop").disabled, true);
   assert.equal(card.shadowRoot.querySelector(".finish").textContent, "");
 });
 

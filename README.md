@@ -11,8 +11,10 @@ Screenshots show the actual cards with synthetic demo entities and states.
 
 ### Washer
 
-`custom:washer-card` shows one compact status tile. Tap it to open Start/Stop,
-Delay and estimated finish. Colors and sizing follow the other device cards.
+`custom:washer-card` shows one compact status tile. Tap it to open Start and Stop,
+Delay and estimated finish. Both buttons stay visible: Start is disabled while
+running, Stop is disabled while idle, and both are disabled during commands.
+Colors and sizing follow the other device cards.
 Start sends `wake_up` when sleeping or powered off, waits for a ready state and
 Remote Start permission, then sends `start`. Commands are confirmed by live
 state updates, with a 30-second timeout per stage and visible cloud errors.

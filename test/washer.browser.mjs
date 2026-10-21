@@ -32,8 +32,10 @@ try {
     await page.locator("washer-card .entry").click();
     assert.equal(await page.locator("washer-card dialog").evaluate(el => el.open), true);
     await page.screenshot({ path: `test-results/washer-ready-${width}.png` });
-    await page.locator("washer-card .primary").click();
-    assert.equal(await page.locator("washer-card .primary span").textContent(), "Stop");
+    assert.equal(await page.locator("washer-card .stop").isDisabled(), true);
+    await page.locator("washer-card .start").click();
+    assert.equal(await page.locator("washer-card .start").isDisabled(), true);
+    assert.equal(await page.locator("washer-card .stop").isDisabled(), false);
     assert.deepEqual(await page.evaluate(() => window.calls.map(c => c[2].option)), ["wake_up", "start"]);
     assert.equal(await page.locator("washer-card select").isDisabled(), true);
     await page.screenshot({ path: `test-results/washer-running-${width}.png` });
@@ -45,8 +47,9 @@ try {
       return dialog.scrollWidth <= dialog.clientWidth && document.documentElement.scrollWidth <= innerWidth;
     }), "dialog and tile must not overflow");
     page.once("dialog", dialog => dialog.accept());
-    await page.locator("washer-card .primary").click();
-    assert.equal(await page.locator("washer-card .primary span").textContent(), "Start");
+    await page.locator("washer-card .stop").click();
+    assert.equal(await page.locator("washer-card .start").isDisabled(), false);
+    assert.equal(await page.locator("washer-card .stop").isDisabled(), true);
     await page.keyboard.press("Escape");
     assert.equal(await page.locator("washer-card dialog").evaluate(el => el.open), false);
     assert.deepEqual(errors, []);

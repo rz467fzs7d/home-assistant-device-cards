@@ -53,7 +53,7 @@ class WasherCard extends HTMLElement {
     <button class="entry" aria-haspopup="dialog"><ha-icon icon="mdi:washing-machine"></ha-icon><span class="info"><span class="name"></span><div class="summary"></div></span><ha-icon class="remote" icon="mdi:remote"></ha-icon></button>
     <dialog><header><ha-icon icon="mdi:washing-machine"></ha-icon><h2></h2><button class="icon-button close" aria-label="Close" title="Close"><ha-icon icon="mdi:close"></ha-icon></button></header>
     <div class="status-row"><span class="status"></span><span class="finish"></span></div>
-    <div class="controls"><button class="primary"><ha-icon></ha-icon><span></span></button><label class="delay">Delay<select aria-label="Delay"></select></label></div>
+    <div class="controls"><button class="primary start" title="Start" aria-label="Start"><ha-icon icon="mdi:play"></ha-icon><span>Start</span></button><button class="primary stop" title="Stop" aria-label="Stop"><ha-icon icon="mdi:stop"></ha-icon><span>Stop</span></button><label class="delay">Delay<select aria-label="Delay"></select></label></div>
     <div class="remote-line"></div><div class="message" role="alert"></div>
     <footer><button class="icon-button details" aria-label="Washer Details" title="Washer Details"><ha-icon icon="mdi:information-outline"></ha-icon></button></footer></dialog>`;
     const root = this.shadowRoot, dialog = root.querySelector("dialog");
@@ -69,7 +69,8 @@ class WasherCard extends HTMLElement {
       const r = dialog.getBoundingClientRect();
       if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) close();
     };
-    root.querySelector(".primary").onclick = () => this.operate();
+    root.querySelector(".start").onclick = () => this.operate(false);
+    root.querySelector(".stop").onclick = () => this.operate(true);
     root.querySelector("select").onchange = event => this.setDelay(event.target.value);
     root.querySelector(".details").onclick = () => {
       close();
@@ -93,13 +94,11 @@ class WasherCard extends HTMLElement {
       node.title = `Remote Start: ${label(this.state(this.config.remote_start_entity))}`;
     });
     root.querySelector(".remote-line").textContent = this.config.remote_start_entity ? `Remote Start: ${label(this.state(this.config.remote_start_entity))}` : "";
-    const button = root.querySelector(".primary");
-    button.querySelector("span").textContent = this.active ? "Stop" : "Start";
-    button.title = this.active ? "Stop" : "Start";
-    button.setAttribute("aria-label", button.title);
-    button.querySelector("ha-icon").setAttribute("icon", this.active ? "mdi:stop" : "mdi:play");
-    button.setAttribute("aria-busy", String(!!this.busy));
-    button.disabled = !!this.busy || this.pendingDelay || !(this.active || this.ready || ASLEEP.includes(this.status)) || !this.options.includes(this.active ? "stop" : "start");
+    for (const stop of [false, true]) {
+      const button = root.querySelector(stop ? ".stop" : ".start");
+      button.setAttribute("aria-busy", String(!!this.busy));
+      button.disabled = !!this.busy || !!this.pendingDelay || (stop ? !this.active : this.active || !(this.ready || ASLEEP.includes(this.status))) || !this.options.includes(stop ? "stop" : "start");
+    }
     const entity = this._hass.states[this.config.delay_entity], select = root.querySelector("select");
     let values = [];
     if (this.config.delay_entity?.startsWith("input_select.")) values = entity?.attributes?.options || [];
@@ -147,9 +146,8 @@ class WasherCard extends HTMLElement {
     await this._hass.callService("select", "select_option", { entity_id: this.config.operation_entity, option });
     if (signal.aborted) throw new DOMException("Cancelled", "AbortError");
   }
-  async operate() {
-    if (this.busy || this.pendingDelay || this.shadowRoot.querySelector(".primary").disabled) return;
-    const stop = this.active;
+  async operate(stop = this.active) {
+    if (this.busy || this.pendingDelay || this.shadowRoot.querySelector(stop ? ".stop" : ".start").disabled) return;
     if (stop && !window.confirm("Stop the washer?")) return;
     const controller = new AbortController(); this.controller = controller;
     const { signal } = controller;
