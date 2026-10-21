@@ -2,7 +2,7 @@ import { chromium } from "@playwright/test";
 import assert from "node:assert/strict";
 import { readFile, mkdir } from "node:fs/promises";
 const icons = {};
-if (process.env.DOC_SCREENSHOTS) for (const name of ["dishwasher", "close", "play", "information-outline"]) {
+if (process.env.DOC_SCREENSHOTS) for (const name of ["dishwasher", "close", "play", "stop", "information-outline"]) {
   const response = await fetch(`https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/${name}.svg`);
   if (!response.ok) throw new Error(`Cannot load ${name}`);
   icons[`mdi:${name}`] = await response.text();
