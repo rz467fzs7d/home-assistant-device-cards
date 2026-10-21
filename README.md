@@ -9,6 +9,34 @@ Screenshots show the actual cards with synthetic demo entities and states.
 
 ## Cards
 
+### Washer
+
+`custom:washer-card` shows one compact status tile. Tap it to open Start/Stop,
+Delay and estimated finish. Colors and sizing follow the other device cards.
+Start sends `wake_up` when sleeping or powered off, waits for a ready state and
+Remote Start permission, then sends `start`. Commands are confirmed by live
+state updates, with a 30-second timeout per stage and visible cloud errors.
+Remote Start must be enabled on the appliance; the card cannot grant permission.
+Closing the panel cancels any subsequent commands, not commands already sent.
+Power-off wake support depends on the appliance and integration.
+No physical outlet is switched, and no program-selection capability is implied.
+
+```yaml
+type: custom:washer-card
+name: Washer
+state_entity: sensor.laundry_washer_current_status
+operation_entity: select.laundry_washer_operation
+remote_start_entity: binary_sensor.laundry_washer_remote_start
+finish_entity: sensor.laundry_washer_remaining_time
+delay_entity: number.laundry_washer_delayed_end
+```
+
+The official LG ThinQ entity values are supported. `state_entity` and
+`operation_entity` are required; the other bindings are optional. `delay_entity`
+also accepts an existing `input_select`. A visual editor exposes these bindings.
+
+<img src="docs/images/washer-controls.png" alt="Washer panel showing live state, estimated finish, Start or Stop, and a delay selector" width="390">
+
 ### Power Strip
 
 A single compact tile shows the strip icon and `4 On · 2 Off`.
