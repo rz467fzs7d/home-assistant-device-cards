@@ -9,6 +9,69 @@ Screenshots show the actual cards with synthetic demo entities and states.
 
 ## Cards
 
+### Air Fryer And Pressure Cooker
+
+`custom:air-fryer-card` and `custom:pressure-cooker-card` open a compact control
+panel from a single status tile. Appliance silhouettes are adapted from
+[HA Appliance Card v2.30.0](https://github.com/ADNPolymerase/ha-appliance-card),
+under MIT; see NOTICE.md. Existing Xiaomi Home entities remain the backend.
+
+<img src="docs/images/air-fryer-controls.png" alt="Air fryer controls with temperature and duration" width="350">
+<img src="docs/images/pressure-cooker-controls.png" alt="Pressure cooker controls with program and lid status" width="350">
+
+```yaml
+type: custom:air-fryer-card
+name: Air Fryer
+state_entity: sensor.fryer_status
+start_entity: button.fryer_start
+stop_entity: button.fryer_cancel
+pause_entity: button.fryer_pause
+resume_entity: button.fryer_resume
+target_temperature_entity: number.fryer_temperature
+target_time_entity: number.fryer_duration
+remaining_entity: sensor.fryer_remaining
+fault_entity: sensor.fryer_fault
+recipe_entity: text.fryer_recipe
+finished_entity: event.fryer_finished
+```
+
+```yaml
+type: custom:pressure-cooker-card
+name: Cooker
+state_entity: sensor.cooker_status
+start_entity: notify.cooker_start
+stop_entity: button.cooker_cancel
+remaining_entity: sensor.cooker_remaining
+fault_entity: sensor.cooker_fault
+temperature_entity: sensor.cooker_temperature
+cover_entity: sensor.cooker_lid
+stage_entity: sensor.cooker_stage
+taste_entity: sensor.cooker_texture
+error_entity: sensor.cooker_error
+finished_entity: event.cooker_finished
+modes:
+  - label: Fine Cook
+    value: 1
+  - label: Soup
+    value: 6
+```
+
+Program values are device-specific: these examples match `chunmi.pre_cooker.mini1`.
+The cooker action uses Xiaomi Home's targeted `notify.send_message` action,
+with an integer JSON array such as `[6]`; it is not an email notification.
+Use only values verified against your model's MIoT specification. The card does
+not install or replace an integration. All bindings except status are optional;
+unbound controls are hidden. The visual editor exposes bindings and program JSON.
+Temperature and duration use the number entity's bounds and step, with explicit
+check buttons to apply edits. Start is blocked until pending edits are applied.
+Start and Stop ask for confirmation; commands wait for actual state readback,
+not just service acknowledgment. Timeout errors are visible. Closing cancels
+waiting, not a command already sent. Cooking stages and remaining time are
+hidden while idle. Lid values are shown verbatim, not inferred as safe or closed.
+The mini1 value `无盖/有盖已锁好` does not distinguish a missing lid from a locked lid.
+Never rely on the card as an appliance safety interlock. Browser tests use mock
+services only; no physical cooking cycle is started by the test suite.
+
 ### Washer
 
 `custom:washer-card` shows one compact status tile. Tap it to open Start and Stop,

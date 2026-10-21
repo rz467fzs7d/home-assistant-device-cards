@@ -4,4 +4,6 @@ import "./cards/speaker-card.js";
 import "./cards/speaker-editor.js";
 import "./cards/washer-card.js";
 import "./cards/washer-editor.js";
+import "./cards/cooking-card.js";
+import "./cards/cooking-editor.js";
 console.info(`Home Assistant Device Cards ${__VERSION__}`);
