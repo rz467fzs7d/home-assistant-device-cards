@@ -41,7 +41,9 @@ State is required; the remaining bindings are optional. Running stages are
 hidden while off, and the last program is not presented as an active cycle.
 No door state, remaining time or missing controls are fabricated. Optional
 `remaining_entity`, `fault_entity` and `finished_entity` use real entities only.
-The real household dishwasher has no exposed Stop button; it remains hidden.
+Start and Stop remain visible on the left of one control row, with Program on
+the right. The real household dishwasher has no exposed Stop action, so its
+Stop button is disabled and explains that limitation in its tooltip.
 Browser checks use synthetic entities and never start a real wash.
 
 ### Air Fryer And Pressure Cooker

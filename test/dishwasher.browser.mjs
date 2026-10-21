@@ -29,6 +29,11 @@ try {
     await page.locator("dishwasher-card .entry").click();
     assert.equal(await page.locator("dishwasher-card .start").isEnabled(), false);
     assert.equal(await page.locator("dishwasher-card select").isEnabled(), false);
+    const startBox = await page.locator("dishwasher-card .start").boundingBox();
+    const stopBox = await page.locator("dishwasher-card .stop").boundingBox();
+    const programBox = await page.locator("dishwasher-card select").boundingBox();
+    assert.ok(startBox.x < stopBox.x && stopBox.x + stopBox.width <= programBox.x);
+    assert.ok(Math.abs(startBox.y - programBox.y) < 2, "controls share one row");
     await page.screenshot({ path: `test-results/dishwasher-${variant}-off-${width}.png` });
     const bounds = await page.locator("dishwasher-card dialog").boundingBox(); assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= width);
     assert.ok(await page.evaluate(() => window.card.shadowRoot.querySelector("dialog").scrollWidth <= window.card.shadowRoot.querySelector("dialog").clientWidth));

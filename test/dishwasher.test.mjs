@@ -15,7 +15,9 @@ test("dishwasher registration and live Power Off display do not claim Idle", () 
   assert.equal(card.shadowRoot.querySelector(".status").textContent, "Power Off");
   assert.equal(card.shadowRoot.querySelector(".start").disabled, true);
   assert.equal(card.shadowRoot.querySelector(".program-select").disabled, true);
-  assert.equal(card.shadowRoot.querySelector(".stop").hidden, true);
+  assert.equal(card.shadowRoot.querySelector(".stop").hidden, false);
+  assert.equal(card.shadowRoot.querySelector(".stop").disabled, true);
+  assert.ok(card.shadowRoot.querySelector(".controls .program-select"));
   assert.match(card.shadowRoot.querySelector(".facts").textContent, /Fruit Wash/);
 });
 test("program selection is local only; explicit confirmed Start sends exact native option", async () => {

@@ -23,11 +23,14 @@ class DishwasherCard extends CookingCard {
   }
   render() {
     super.render();
+    const style = document.createElement("style");
+    style.textContent = '.controls{justify-content:flex-start;min-width:0}.program-field{display:block;min-width:0;margin-left:auto;flex:0 1 190px}.program-field select{width:100%;max-width:100%;font-size:13px;text-overflow:ellipsis}.program-field>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}';
+    this.shadowRoot.append(style);
     if (this.config.mode_select_entity) {
-      const row = document.createElement("label"); row.className = "field";
+      const row = document.createElement("label"); row.className = "program-field";
       row.innerHTML = '<span>Program</span><select class="program-select" aria-label="Program"></select>';
       row.querySelector("select").onchange = event => { this.selectedProgram = event.target.value; this.update(); };
-      this.shadowRoot.querySelector(".fields").append(row);
+      this.shadowRoot.querySelector(".controls").append(row);
     }
     this.update();
   }
@@ -53,6 +56,10 @@ class DishwasherCard extends CookingCard {
     root.querySelector(".summary").textContent = [status, phase].filter(Boolean).join(" · ");
     root.querySelector(".machine").classList.toggle("spinning", this.status === "running" && ["pre_wash", "wash", "rinse"].includes(this.state("progress_entity")));
     root.querySelector(".controls").hidden = !this.config.mode_select_entity && !this.config.start_entity && !this.config.stop_entity;
+    for (const action of ["start", "stop"]) {
+      const button = root.querySelector(`.${action}`); button.hidden = false; button.disabled = !this.can(action);
+      button.title = action === "stop" && !this.config.stop_entity ? "Stop Not Exposed By Integration" : action === "stop" ? "Stop" : "Start";
+    }
     const facts = root.querySelector(".facts");
     for (const [key, title] of [["mode_entity", "Current Program"], ["progress_entity", "Stage"]]) {
       if (!this.available(key) || (key === "progress_entity" && !this.active)) continue;
