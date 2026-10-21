@@ -19,7 +19,21 @@ export const cookingArtCss = `
 .rk-disp{position:absolute;left:50%;top:12px;transform:translateX(-50%);min-width:32px;height:12px;padding:0 3px;border-radius:2px;background:#14161a;color:#aaa;text-align:center;font:600 8px/12px monospace}
 .rk-key{position:absolute;top:32px;width:8px;height:8px;border-radius:50%;background:#999}.rk-key.k1{left:22px}.rk-key.k2{left:34px}.rk-key.k3{left:46px}
 .rk-foot{position:absolute;left:20px;right:20px;bottom:4px;height:4px;border-radius:2px;background:#777}.machine.heating .rk-foot,.machine.heating .rk-disp{color:var(--state-active-color,#ff9800)}
+.dw-body{position:absolute;inset:0;border-radius:10px 10px 6px 6px;background:linear-gradient(145deg,var(--ac-body,#d7d7d7),var(--ac-body-lo,#aeb2b5));border:1px solid var(--divider-color,#c7c7c7);perspective:260px}
+.dw-controls{position:absolute;top:6px;left:8px;right:8px;height:12px;border:1px solid #fff2;border-radius:3px;background:#141617c7}
+.dw-controls::before,.dw-controls::after{content:"";position:absolute;top:3px;width:4px;height:4px;border-radius:50%;background:#697078}.dw-controls::before{right:5px}.dw-controls::after{right:12px}
+.dw-screen{position:absolute;top:2px;left:4px;width:24px;height:6px;border-radius:2px;background:#16292e;box-shadow:inset 0 0 0 1px #81d5cd4d}
+.dw-cavity{position:absolute;top:22px;right:8px;bottom:8px;left:8px;overflow:hidden;border:3px solid #34383b;border-radius:4px;background:linear-gradient(180deg,#33474f,#7d8f95);box-shadow:inset 0 0 10px #0005}
+.dw-rack{position:absolute;right:10%;bottom:13%;left:10%;height:34%;border-top:1px solid #dee8ebc2;border-bottom:1px solid #dee8eb80;background:repeating-linear-gradient(90deg,transparent 0 7px,#dee8eb94 8px 9px);transform:perspective(100px) rotateX(18deg)}
+.dw-door{position:absolute;top:22px;right:8px;bottom:8px;left:8px;z-index:5;border:3px solid #34383b;border-radius:4px;background:linear-gradient(180deg,#0e141880,#0e1418bd);box-shadow:inset 0 0 0 1px #e1ebec4d,0 3px 5px #0004;transform-origin:50% 100%}
+.dw-door::after{content:"";position:absolute;inset:0;border-radius:2px;background:linear-gradient(116deg,#ffffff2b 0 17%,transparent 40%)}
+.dw-door::before{content:"";position:absolute;top:4px;right:18%;left:18%;height:2px;border-radius:8px;background:#e1e7e899}
+.dw-spray{position:absolute;top:21%;left:10%;width:80%;height:5px;border-radius:8px;background:var(--primary-color,#03a9f4);opacity:0;transform-origin:50% 50%}
+.machine.spinning .dw-spray{opacity:1;animation:dw-spray-spin 2.8s linear infinite}.machine.spinning .dw-door{background:linear-gradient(180deg,#121a1e14,#121a1e4d)}
+@keyframes dw-spray-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.machine.spinning .dw-spray{animation:none}}
 `;
-export const cookingArt = kind => kind === "air-fryer"
+export const cookingArt = kind => kind === "dishwasher"
+  ? '<div class="machine"><div class="dw-body"><div class="dw-controls"><div class="dw-screen"></div></div><div class="dw-cavity"><div class="dw-rack"></div><div class="dw-spray"></div></div><div class="dw-door" aria-hidden="true"></div></div></div>'
+  : kind === "air-fryer"
   ? '<div class="machine"><div class="af-body"></div><div class="af-vent"></div><div class="af-led"></div><div class="af-seam"></div><div class="af-drawer"><div class="af-handle"><div class="af-btn"></div></div></div><div class="af-foot f1"></div><div class="af-foot f2"></div></div>'
   : '<div class="machine"><div class="rk-handle"></div><div class="rk-vent"></div><div class="rk-lid"></div><div class="rk-body"><div class="rk-disp">--</div><div class="rk-key k1"></div><div class="rk-key k2"></div><div class="rk-key k3"></div></div><div class="rk-foot"></div></div>';

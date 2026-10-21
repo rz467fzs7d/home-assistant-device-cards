@@ -9,6 +9,37 @@ Screenshots show the actual cards with synthetic demo entities and states.
 
 ## Cards
 
+### Dishwasher
+
+`custom:dishwasher-card` uses the same compact tile and dialog as the other
+appliance cards, with a dishwasher silhouette adapted from HA Appliance Card.
+Midea AC LAN provides backend entities, not a bundled frontend card.
+
+<img src="docs/images/dishwasher-controls.png" alt="Dishwasher panel with a locally selected program and confirmed Start" width="350">
+
+```yaml
+type: custom:dishwasher-card
+name: Dishwasher
+state_entity: sensor.dishwasher_status
+progress_entity: sensor.dishwasher_progress
+mode_entity: sensor.dishwasher_mode
+mode_select_entity: select.dishwasher_mode_select
+```
+
+For Midea E1, selecting a program through the integration starts washing.
+The card deliberately keeps dropdown edits local: only explicit Start, followed
+by confirmation, calls `select.select_option`. It waits for Running or Delay
+readback. Power Off, unavailable program controls, unknown/error states and
+the neutral program disable Start. No raw protocol commands are generated.
+Only bind `mode_select_entity` when its native selection action starts a cycle.
+Other integrations may bind optional `start_entity`/`stop_entity` buttons instead.
+State is required; the remaining bindings are optional. Running stages are
+hidden while off, and the last program is not presented as an active cycle.
+No door state, remaining time or missing controls are fabricated. Optional
+`remaining_entity`, `fault_entity` and `finished_entity` use real entities only.
+The real household dishwasher has no exposed Stop button; it remains hidden.
+Browser checks use synthetic entities and never start a real wash.
+
 ### Air Fryer And Pressure Cooker
 
 `custom:air-fryer-card` and `custom:pressure-cooker-card` open a compact control

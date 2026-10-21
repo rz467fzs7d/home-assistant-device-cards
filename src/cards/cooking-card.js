@@ -9,9 +9,9 @@ export class CookingCard extends HTMLElement {
   static getConfigElement() { return document.createElement("cooking-card-editor"); }
   setConfig(config) {
     if (!/^sensor\./.test(config.state_entity || "")) throw new Error("state_entity must be a sensor");
-    const kind = this.localName === "air-fryer-card" ? "air-fryer" : "pressure-cooker";
+    const kind = this.localName === "dishwasher-card" ? "dishwasher" : this.localName === "air-fryer-card" ? "air-fryer" : "pressure-cooker";
     for (const key of ["stop_entity", "pause_entity", "resume_entity"]) if (config[key] && !/^button\./.test(config[key])) throw new Error(`${key} must be a button`);
-    if (config.start_entity && !(kind === "air-fryer" ? /^button\./ : /^notify\./).test(config.start_entity)) throw new Error("Invalid start_entity domain");
+    if (config.start_entity && !(kind === "pressure-cooker" ? /^notify\./ : /^button\./).test(config.start_entity)) throw new Error("Invalid start_entity domain");
     for (const key of ["target_time_entity", "target_temperature_entity"]) if (config[key] && !/^number\./.test(config[key])) throw new Error(`${key} must be a number`);
     if (config.modes && (!Array.isArray(config.modes) || config.modes.some(m => !Number.isInteger(m.value) || typeof m.label !== "string"))) throw new Error("modes must contain integer values and labels");
     this.cancel();
@@ -44,7 +44,7 @@ export class CookingCard extends HTMLElement {
   cancel() { this.controller?.abort(); this.controller = null; this.busy = ""; }
   disconnectedCallback() { this.cancel(); this.shadowRoot?.querySelector("dialog")?.close(); }
   render() {
-    const icon = this.config.kind === "air-fryer" ? "stove" : "pot-steam";
+    const icon = this.config.kind === "dishwasher" ? "dishwasher" : this.config.kind === "air-fryer" ? "stove" : "pot-steam";
     this.shadowRoot.innerHTML = `<style>
       :host{display:block;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);color:var(--primary-text-color,#222)}*{box-sizing:border-box}[hidden]{display:none!important}button,input,select{font:inherit;color:inherit}button{cursor:pointer}button:disabled,input:disabled,select:disabled{opacity:.4;cursor:default}
       .entry{display:flex;align-items:center;gap:12px;width:100%;height:66px;padding:10px 12px;text-align:left;background:var(--ha-card-background,#fff);border:1px solid var(--divider-color,#ddd);border-radius:8px}.entry>ha-icon{--mdc-icon-size:28px;color:var(--state-inactive-color,#999)}.entry.active>ha-icon{color:var(--state-active-color,#ff9800)}.info{min-width:0;flex:1}.name{font-size:14px;font-weight:500;overflow-wrap:anywhere}.summary{font-size:12px;margin-top:3px;color:var(--secondary-text-color,#777);overflow-wrap:anywhere}

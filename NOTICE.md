@@ -3,7 +3,7 @@
 `src/cards/cooking-art.js`:
 - Source: https://github.com/ADNPolymerase/ha-appliance-card (v2.30.0).
 - MIT License, Copyright (c) 2026 ADNPolymerase.
-- Air fryer and rice cooker HTML/CSS silhouettes adapted for this library's
+- Air fryer, rice cooker and dishwasher HTML/CSS silhouettes adapted for this library's
   theme and compact dialog. The rice cooker silhouette represents a generic
   cooker, not a precise model. Device controls are implemented separately.
 - The MIT permission and warranty terms reproduced below apply to this artwork.
