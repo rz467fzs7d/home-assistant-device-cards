@@ -15,6 +15,20 @@ test("action entities with unknown timestamp remain usable, unavailable entities
   const { card, hass } = setup(); assert.equal(card.can("start"), true);
   hass.states["button.start"].state = "unavailable"; card.hass = hass; assert.equal(card.can("start"), false);
 });
+test("original appliance outline is shared by tile, title and dialog without service calls", () => {
+  const designs = [];
+  for (const kind of ["air-fryer", "pressure-cooker"]) {
+    const { card, calls, state } = setup(kind, kind === "air-fryer" ? "Standby" : "Idle");
+    const tile = card.shadowRoot.querySelector(".entry svg").innerHTML;
+    assert.equal(tile, card.shadowRoot.querySelector("header svg").innerHTML);
+    assert.equal(tile, card.shadowRoot.querySelector(".machine svg").innerHTML);
+    assert.equal(card.shadowRoot.querySelector('.entry ha-icon'), null);
+    state(kind === "air-fryer" ? "Cooking" : "Busy");
+    assert.equal(card.shadowRoot.querySelector(".entry").classList.contains("active"), true);
+    assert.equal(calls.length, 0); designs.push(tile);
+  }
+  assert.notEqual(designs[0], designs[1]);
+});
 test("trim state, hide stale remaining and stage while idle, decode recipe safely", () => {
   const { card } = setup("air-fryer", "Power Off ");
   assert.equal(card.status, "power off"); assert.equal(card.shadowRoot.querySelector(".remaining").textContent, "");
