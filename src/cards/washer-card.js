@@ -44,11 +44,11 @@ class WasherCard extends HTMLElement {
       dialog::backdrop{background:rgba(0,0,0,.48)}header{display:flex;align-items:center;gap:10px}header>ha-icon{--mdc-icon-size:24px}h2{font-size:16px;font-weight:500;margin:0;flex:1;overflow-wrap:anywhere}
       .icon-button{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;background:var(--secondary-background-color,#eee)}.icon-button ha-icon{--mdc-icon-size:20px}
       .status-row{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:12px}.status{font-size:18px;font-weight:500}.finish{text-align:right;font-size:13px;color:var(--secondary-text-color);overflow-wrap:anywhere}
-      .controls{display:flex;align-items:center;gap:12px;min-height:48px}.primary{display:flex;align-items:center;justify-content:center;gap:8px;min-width:108px;height:40px;border:0;border-radius:6px;background:var(--primary-color,#03a9f4);color:var(--text-primary-color,#fff)}.primary ha-icon{--mdc-icon-size:20px}
+      .controls{display:flex;align-items:center;gap:12px;min-height:48px}.primary{position:relative;display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border:0;border-radius:12px;background:var(--secondary-background-color,#f2f2f2);color:var(--primary-text-color,#222)}.primary ha-icon{--mdc-icon-size:20px}.primary span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.primary:hover:not(:disabled){background:var(--divider-color,#e5e5e5)}
       .delay{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:0;font-size:13px;color:var(--secondary-text-color)}select{min-width:70px;max-width:120px;height:40px;border:1px solid var(--divider-color,#ddd);border-radius:6px;background:var(--card-background-color,#fff);padding:0 8px}
       .remote-line{font-size:12px;color:var(--secondary-text-color);margin-top:16px}.message{font-size:13px;color:var(--error-color,#db4437);margin-top:12px;overflow-wrap:anywhere}.message:empty{display:none}
       footer{display:flex;justify-content:flex-end;margin-top:14px}button:focus-visible,select:focus-visible{outline:2px solid var(--primary-color);outline-offset:3px}
-      @media(max-width:350px){dialog{padding:16px}.controls{gap:8px}.primary{min-width:92px}.delay{gap:5px}}
+      @media(max-width:350px){dialog{padding:16px}.controls{gap:8px}.delay{gap:5px}}
     </style>
     <button class="entry" aria-haspopup="dialog"><ha-icon icon="mdi:washing-machine"></ha-icon><span class="info"><span class="name"></span><div class="summary"></div></span><ha-icon class="remote" icon="mdi:remote"></ha-icon></button>
     <dialog><header><ha-icon icon="mdi:washing-machine"></ha-icon><h2></h2><button class="icon-button close" aria-label="Close" title="Close"><ha-icon icon="mdi:close"></ha-icon></button></header>
@@ -95,6 +95,8 @@ class WasherCard extends HTMLElement {
     root.querySelector(".remote-line").textContent = this.config.remote_start_entity ? `Remote Start: ${label(this.state(this.config.remote_start_entity))}` : "";
     const button = root.querySelector(".primary");
     button.querySelector("span").textContent = this.active ? "Stop" : "Start";
+    button.title = this.active ? "Stop" : "Start";
+    button.setAttribute("aria-label", button.title);
     button.querySelector("ha-icon").setAttribute("icon", this.active ? "mdi:stop" : "mdi:play");
     button.setAttribute("aria-busy", String(!!this.busy));
     button.disabled = !!this.busy || this.pendingDelay || !(this.active || this.ready || ASLEEP.includes(this.status)) || !this.options.includes(this.active ? "stop" : "start");
