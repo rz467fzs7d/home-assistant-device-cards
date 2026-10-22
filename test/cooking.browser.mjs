@@ -35,6 +35,10 @@ try {
     }), [32, 32, 32, 32, "0px", "none"]);
     assert.deepEqual(await page.locator(`${kind}-card .entry .appliance-icon`).evaluate(el => [getComputedStyle(el).backgroundColor, getComputedStyle(el).boxShadow]), ["rgba(0, 0, 0, 0)", "none"]);
     await page.locator(`${kind}-card .entry`).click();
+    assert.deepEqual(await page.locator(`${kind}-card`).evaluate(el => {
+      const root = el.shadowRoot;
+      return ["h2", ".status", ".field", ".facts", "input,select"].map(selector => getComputedStyle(root.querySelector(selector)).fontSize);
+    }), ["16px", "22px", "13px", "13px", "13px"]);
     assert.equal(await page.locator(`${kind}-card .stop`).isDisabled(), true);
     await page.screenshot({ path: `test-results/${kind}-${width}.png` });
     if (width === 390) await page.locator(`${kind}-card dialog`).screenshot({ path: `test-results/${kind}-controls.png` });
