@@ -44,7 +44,7 @@ test("summary hides zero counts in both tile and dialog", () => {
 });
 test("appearance changes only artwork, not outlet controls", () => {
   const { card } = setup();
-  for (const icon_variant of ["cn-six-usb", "cn-five-cord-right", "cn-five-cord-left"]) {
+  for (const icon_variant of ["cn-six-usb", "cn-five-cord-right", "cn-five-cord-left", "cn-five-cord-right-tilted"]) {
     card.setConfig({ icon_variant, entities: ["switch.one", "light.two"] });
     assert.equal(card.shadowRoot.querySelectorAll(".outlet").length, 2);
     assert.equal(card.shadowRoot.querySelector(".summary").textContent, "1 On · 1 Off");
