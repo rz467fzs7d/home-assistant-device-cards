@@ -27,7 +27,7 @@ class PowerStripCard extends HTMLElement {
     const powerStripIcon = `data:image/svg+xml,${encodeURIComponent(powerStripIcons[this.config.icon_variant || "default"].svg)}`;
     const largeIcon = ["cn-six-usb", "cn-six"].includes(this.config.icon_variant);
     const iconSize = largeIcon ? 38 : 32;
-    const iconScale = ["cn-five-cord-right-tilted", "cn-three-cord-right-tilted"].includes(this.config.icon_variant) ? 1.4 : 1;
+    const iconScale = ["homekit", "cn-five-cord-right-tilted", "cn-three-cord-right-tilted"].includes(this.config.icon_variant) ? 1.4 : 1;
     this.shadowRoot.innerHTML = `
       <style>
         :host{display:block;color:var(--primary-text-color);font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif)}

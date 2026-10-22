@@ -9,9 +9,11 @@ import fourLeft from "../assets/powerstrip-cn-four-inline-cord-left.svg";
 import fiveLeft from "../assets/powerstrip-cn-five-inline-cord-left.svg";
 import fiveTilted from "../assets/powerstrip-cn-five-inline-cord-tilted.svg";
 import threeTilted from "../assets/powerstrip-cn-three-inline-cord-tilted.svg";
+import homekit from "../assets/powerstrip-homekit.svg";
 
 export const powerStripIcons = {
   default: { label: "Original", svg: original },
+  homekit: { label: "HomeKit Power Strip", svg: homekit },
   "cn-six-usb": { label: "6 Sockets + 4 USB", svg: sixUsb },
   "cn-six": { label: "6 Sockets", svg: six },
   "cn-four-inline": { label: "4 Sockets - Inline", svg: four },

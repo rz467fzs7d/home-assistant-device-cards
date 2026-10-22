@@ -57,3 +57,8 @@ SOFTWARE.
 
 Apple, HomePod and Apple TV are trademarks of Apple Inc. This project is not
 affiliated with or endorsed by Apple.
+
+The optional HomeKit power-strip artwork is Apple's SF Symbol
+`poweroutlet.strip.fill`, sourced from husker-dev/sf-symbols
+(mono/poweroutlet.strip.fill.svg). Apple symbol artwork is not covered by
+this project's MIT license; Apple's applicable SF Symbols terms apply.
