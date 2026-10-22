@@ -52,7 +52,8 @@ test("appearance changes only artwork, not outlet controls", () => {
     const svg = decodeURIComponent(css.match(/mask:url\("([^"]+)"\)/)[1].split(",")[1]);
     assert.match(svg, /id="cutouts"/);
     if (icon_variant === "cn-six") {
-      assert.match(svg, /width="11.9" height="6.9" rx="1.2"/);
+      assert.match(svg, /width="11.9" height="8.6" rx="1.2"/);
+      assert.ok(css.includes("mask-size:28.32px 28.32px"));
       assert.equal((svg.match(/<use /g) || []).length, 6);
     }
     assert.ok(css.includes(`transform:scale(${icon_variant.endsWith("-tilted") ? 1.4 : 1})`));

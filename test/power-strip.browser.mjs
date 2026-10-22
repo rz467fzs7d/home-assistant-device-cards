@@ -39,7 +39,28 @@ try {
     assert.equal(geometry.circles.length, 3);
     assert.ok(geometry.circles.every(radius => Math.abs(radius - 3.72657) < .000001));
     assert.equal(geometry.clearOfText, true);
-    await page.locator("power-strip-card").screenshot({ path: `test-results/strip-homekit-${width}-${deviceScaleFactor}.png` });
+    const proportions = await page.evaluate(() => {
+      const single = document.querySelector("power-strip-card");
+      const card = document.createElement("power-strip-card");
+      card.setConfig({ name: "Six Sockets", icon_variant: "cn-six", entities: Array.from({ length: 6 }, (_, i) => `switch.socket_${i}`) });
+      card.hass = { states: Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`switch.socket_${i}`, { state: "on" }])), callService: async () => { throw new Error("No device calls in visual checks"); } };
+      document.querySelector("main").append(card);
+      const icon = card.shadowRoot.querySelector(".strip-icon"), style = getComputedStyle(icon);
+      const uri = JSON.parse(style.maskImage.slice(4, -1));
+      const xml = new DOMParser().parseFromString(decodeURIComponent(uri.slice(uri.indexOf(",") + 1)), "image/svg+xml");
+      const box = xml.documentElement.getAttribute("viewBox").split(" ").map(Number);
+      const rects = [...xml.querySelectorAll('g[fill="currentColor"]>rect')];
+      const value = (node, attr) => Number(node.getAttribute(attr));
+      const left = Math.min(...rects.map(rect => value(rect, "x")));
+      const right = Math.max(...rects.map(rect => value(rect, "x") + value(rect, "width")));
+      const factor = parseFloat(style.maskSize) / box[2];
+      const svg = single.shadowRoot.querySelector("svg"), body = svg.querySelector('mask>path[fill="white"]').getBBox();
+      const singleFactor = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
+      return { widthRatio: (right - left) * factor / (body.width * singleFactor), heightRatio: value(rects[0], "height") * factor / (body.height * singleFactor) };
+    });
+    assert.ok(Math.abs(proportions.widthRatio - 1) < .01, "six-slot and single-row visible artwork should have equal width");
+    assert.ok(Math.abs(proportions.heightRatio - 2) < .05, "six-slot visible artwork should be twice as tall");
+    await page.locator("main").screenshot({ path: `test-results/strip-homekit-${width}-${deviceScaleFactor}.png` });
     await page.close();
   }
   console.log("HomeKit strip uses circular sockets and uniform vector transforms at desktop/mobile and 1x/2x pixel density.");
