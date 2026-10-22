@@ -1,6 +1,6 @@
 {
   "name": "home-assistant-device-cards",
-  "version": "0.13.18",
+  "version": "0.13.19",
   "private": true,
   "type": "module",
   "license": "MIT",

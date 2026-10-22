@@ -52,7 +52,11 @@ test("appearance changes only artwork, not outlet controls", () => {
     const svg = decodeURIComponent(css.match(/mask:url\("([^"]+)"\)/)[1].split(",")[1]);
     assert.match(svg, /id="cutouts"/);
     assert.ok(css.includes(`transform:scale(${icon_variant.endsWith("-tilted") ? 1.4 : 1})`));
-    if (icon_variant === "cn-three-cord-right-tilted") assert.equal((svg.match(/<use /g) || []).length, 3);
+    if (icon_variant === "cn-three-cord-right-tilted") {
+      assert.equal((svg.match(/<use /g) || []).length, 3);
+      assert.match(svg, /rotate\(-25\) scale\(\.95\)/);
+      assert.doesNotMatch(svg, /scale\([^)]*[ ,][^)]*\)/, "socket artwork must never stretch non-uniformly");
+    }
   }
   assert.throws(() => card.setConfig({ entities: ["switch.one"], icon_variant: "bogus" }), /icon_variant/);
 });
