@@ -50,6 +50,7 @@ test("sink and cabinet outlines switch together without changing controls", () =
   const config = { ...card.config, icon_variant: "sink" }; card.setConfig(config); card.hass = hass;
   const sink = card.shadowRoot.querySelector(".entry svg").innerHTML;
   assert.notEqual(sink, cabinet);
+  assert.match(sink, /M72 8H110/, "sink variant includes its raised dishwasher lid");
   assert.equal(sink, card.shadowRoot.querySelector("header svg").innerHTML);
   assert.equal(calls.length, 0);
   assert.throws(() => card.setConfig({ ...config, icon_variant: "photo" }), /sink or cabinet/);
