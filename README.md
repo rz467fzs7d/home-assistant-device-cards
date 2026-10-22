@@ -5,11 +5,14 @@ One frontend library, independently configurable cards, no backend integration.
 
 ![Power strip, stereo and home theater card overview](docs/images/cards-overview.png)
 
-Screenshots show the actual cards with synthetic demo entities and states.
+Overview and appliance screenshots use synthetic demo entities and states.
+The Plant Monitor screenshot below shows live Home Assistant readings.
 
 ## Cards
 
 ### Plant Monitor
+
+![Plant Monitor alongside balcony devices](docs/images/plant-monitor-live.png)
 
 `custom:plant-monitor-card` combines moisture, conductivity, illuminance and
 temperature in one compact device card with a twin-probe silhouette.
