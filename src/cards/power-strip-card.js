@@ -37,7 +37,7 @@ class PowerStripCard extends HTMLElement {
         .strip-icon{transform:scale(${iconScale})}
         .entry.active .strip-icon{background:var(--state-switch-active-color,#e6ac00)}
         .strip-icon.homekit{position:relative;transform:none;mask:none;-webkit-mask:none;background:none;color:var(--secondary-text-color)}
-        .strip-icon.homekit>svg{position:absolute;left:-4px;top:-4px;width:40px;height:40px;display:block}
+        .strip-icon.homekit>svg{position:absolute;left:-1px;top:-1px;width:34px;height:34px;display:block}
         .entry.active .strip-icon.homekit{background:none;color:var(--state-switch-active-color,#e6ac00)}
         .entry-info{min-width:0;overflow-wrap:anywhere}
         .name{font-size:14px;font-weight:500}.summary{font-size:12px;color:var(--secondary-text-color);margin-top:3px}

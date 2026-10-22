@@ -22,6 +22,7 @@ try {
         transform: getComputedStyle(icon).transform,
         mask: getComputedStyle(icon).maskImage,
         canvas: [svg.viewBox.baseVal.width, svg.viewBox.baseVal.height],
+        size: [svg.getBoundingClientRect().width, svg.getBoundingClientRect().height],
         scaleX: Math.hypot(transformed.a, transformed.b),
         scaleY: Math.hypot(transformed.c, transformed.d),
         shear: transformed.a * transformed.c + transformed.b * transformed.d,
@@ -32,6 +33,7 @@ try {
     assert.equal(geometry.transform, "none");
     assert.equal(geometry.mask, "none");
     assert.deepEqual(geometry.canvas, [46, 46]);
+    assert.deepEqual(geometry.size, [34, 34]);
     assert.ok(Math.abs(geometry.scaleX - geometry.scaleY) < .000001);
     assert.ok(Math.abs(geometry.shear) < .000001);
     assert.equal(geometry.circles.length, 3);
