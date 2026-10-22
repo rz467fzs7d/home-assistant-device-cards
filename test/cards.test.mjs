@@ -44,13 +44,17 @@ test("summary hides zero counts in both tile and dialog", () => {
 });
 test("appearance changes only artwork, not outlet controls", () => {
   const { card } = setup();
-  for (const icon_variant of ["homekit", "cn-six-usb", "cn-five-cord-right", "cn-five-cord-left", "cn-five-cord-right-tilted", "cn-three-cord-right-tilted"]) {
+  for (const icon_variant of ["homekit", "cn-six", "cn-six-usb", "cn-five-cord-right", "cn-five-cord-left", "cn-five-cord-right-tilted", "cn-three-cord-right-tilted"]) {
     card.setConfig({ icon_variant, entities: ["switch.one", "light.two"] });
     assert.equal(card.shadowRoot.querySelectorAll(".outlet").length, 2);
     assert.equal(card.shadowRoot.querySelector(".summary").textContent, "1 On · 1 Off");
     const css = card.shadowRoot.querySelector("style").textContent;
     const svg = decodeURIComponent(css.match(/mask:url\("([^"]+)"\)/)[1].split(",")[1]);
     assert.match(svg, /id="cutouts"/);
+    if (icon_variant === "cn-six") {
+      assert.match(svg, /width="11.9" height="6.9" rx="1.2"/);
+      assert.equal((svg.match(/<use /g) || []).length, 6);
+    }
     assert.ok(css.includes(`transform:scale(${icon_variant.endsWith("-tilted") ? 1.4 : 1})`));
     if (icon_variant === "homekit") {
       const parser = new card.ownerDocument.defaultView.DOMParser();
