@@ -19,7 +19,7 @@
       </g>
     </mask>
   </defs>
-  <g transform="rotate(-20 23 8)">
+  <g>
     <rect width="46" height="16" fill="currentColor" mask="url(#cutouts)"/>
   </g>
 </svg>

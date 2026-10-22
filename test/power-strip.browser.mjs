@@ -17,7 +17,7 @@ try {
     });
     const geometry = await page.locator("power-strip-card").evaluate(el => {
       const root = el.shadowRoot, icon = root.querySelector(".homekit"), svg = icon.querySelector("svg");
-      const transformed = svg.querySelector("g[transform]").getScreenCTM();
+      const transformed = svg.getScreenCTM();
       return {
         transform: getComputedStyle(icon).transform,
         mask: getComputedStyle(icon).maskImage,
@@ -33,7 +33,7 @@ try {
     assert.equal(geometry.transform, "none");
     assert.equal(geometry.mask, "none");
     assert.deepEqual(geometry.canvas, [46, 46]);
-    assert.deepEqual(geometry.size, [34, 34]);
+    assert.ok(geometry.size.every(size => Math.abs(size - 30.6) < .02));
     assert.ok(Math.abs(geometry.scaleX - geometry.scaleY) < .000001);
     assert.ok(Math.abs(geometry.shear) < .000001);
     assert.equal(geometry.circles.length, 3);
