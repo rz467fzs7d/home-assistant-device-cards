@@ -27,16 +27,18 @@ class PowerStripCard extends HTMLElement {
     const powerStripIcon = `data:image/svg+xml,${encodeURIComponent(powerStripIcons[this.config.icon_variant || "default"].svg)}`;
     const largeIcon = ["cn-six-usb", "cn-six"].includes(this.config.icon_variant);
     const iconSize = largeIcon ? 38 : 32;
-    const iconScale = this.config.icon_variant === "homekit" ? 1.25 : ["cn-five-cord-right-tilted", "cn-three-cord-right-tilted"].includes(this.config.icon_variant) ? 1.4 : 1;
-    const iconRotation = this.config.icon_variant === "homekit" ? -20 : 0;
+    const iconScale = ["cn-five-cord-right-tilted", "cn-three-cord-right-tilted"].includes(this.config.icon_variant) ? 1.4 : 1;
     this.shadowRoot.innerHTML = `
       <style>
         :host{display:block;color:var(--primary-text-color);font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif)}
         *{box-sizing:border-box}button{font:inherit;color:inherit;cursor:pointer}
         .entry{width:100%;height:66px;display:flex;align-items:center;gap:12px;padding:10px 12px;text-align:left;background:var(--ha-card-background,var(--card-background-color,#fff));border:1px solid var(--divider-color,#ddd);border-radius:8px}
         .strip-icon{flex:0 0 ${iconSize}px;width:${iconSize}px;height:${iconSize}px;margin-inline:${largeIcon ? -3 : 0}px;background:var(--secondary-text-color);mask:url("${powerStripIcon}") center/contain no-repeat;-webkit-mask:url("${powerStripIcon}") center/contain no-repeat}
-        .strip-icon{transform:scale(${iconScale}) rotate(${iconRotation}deg)}
+        .strip-icon{transform:scale(${iconScale})}
         .entry.active .strip-icon{background:var(--state-switch-active-color,#e6ac00)}
+        .strip-icon.homekit{position:relative;transform:none;mask:none;-webkit-mask:none;background:none;color:var(--secondary-text-color)}
+        .strip-icon.homekit>svg{position:absolute;left:-4px;top:-4px;width:40px;height:40px;display:block}
+        .entry.active .strip-icon.homekit{background:none;color:var(--state-switch-active-color,#e6ac00)}
         .entry-info{min-width:0;overflow-wrap:anywhere}
         .name{font-size:14px;font-weight:500}.summary{font-size:12px;color:var(--secondary-text-color);margin-top:3px}
         dialog{color:var(--primary-text-color);background:var(--card-background-color,#fff);border:1px solid var(--divider-color,#ddd);border-radius:8px;padding:24px;width:min(420px,calc(100vw - 32px));max-height:85dvh;overflow:auto}
@@ -54,7 +56,7 @@ class PowerStripCard extends HTMLElement {
         .error{color:var(--error-color,#db4437);font-size:13px;margin-top:20px;overflow-wrap:anywhere}
         @media(max-width:350px){dialog{padding:16px}.circle{width:88px;height:88px}}
       </style>
-      <button class="entry" aria-haspopup="dialog"><span class="strip-icon" aria-hidden="true"></span><div class="entry-info"><div class="name"></div><div class="summary"></div></div></button>
+      <button class="entry" aria-haspopup="dialog"><span class="strip-icon${this.config.icon_variant === "homekit" ? " homekit" : ""}" aria-hidden="true">${this.config.icon_variant === "homekit" ? powerStripIcons.homekit.svg : ""}</span><div class="entry-info"><div class="name"></div><div class="summary"></div></div></button>
       <dialog aria-label="Power Strip"><header><h2></h2><div class="summary"></div><button class="close" aria-label="Close"><ha-icon icon="mdi:close"></ha-icon></button></header><div class="outlets"></div><div class="error" role="alert"></div></dialog>`;
     const root = this.shadowRoot;
     root.querySelector(".name").textContent = this.config.name;

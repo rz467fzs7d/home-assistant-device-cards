@@ -51,8 +51,7 @@ test("appearance changes only artwork, not outlet controls", () => {
     const css = card.shadowRoot.querySelector("style").textContent;
     const svg = decodeURIComponent(css.match(/mask:url\("([^"]+)"\)/)[1].split(",")[1]);
     assert.match(svg, /id="cutouts"/);
-    assert.ok(css.includes(`transform:scale(${icon_variant === "homekit" ? 1.25 : icon_variant.endsWith("-tilted") ? 1.4 : 1})`));
-    assert.ok(css.includes(`rotate(${icon_variant === "homekit" ? -20 : 0}deg)`));
+    assert.ok(css.includes(`transform:scale(${icon_variant.endsWith("-tilted") ? 1.4 : 1})`));
     if (icon_variant === "homekit") {
       const parser = new card.ownerDocument.defaultView.DOMParser();
       const root = parser.parseFromString(svg, "image/svg+xml").documentElement;
@@ -60,7 +59,10 @@ test("appearance changes only artwork, not outlet controls", () => {
       assert.equal(viewBox[2], viewBox[3], "source icon canvas must be square before rotation");
       assert.equal(root.getAttribute("width"), root.getAttribute("height"));
       assert.equal(root.getAttribute("preserveAspectRatio"), "xMidYMid meet");
-      assert.doesNotMatch(svg, /rotate\(|scale\(/, "raw artwork must not be stretched or rotated");
+      assert.doesNotMatch(svg, /scale\(/, "raw artwork must not be stretched");
+      assert.equal(root.querySelectorAll("circle").length, 3);
+      assert.equal(root.querySelectorAll("ellipse").length, 0);
+      assert.ok(card.shadowRoot.querySelector(".homekit>svg"));
     }
     if (icon_variant === "cn-three-cord-right-tilted") {
       assert.equal((svg.match(/<use /g) || []).length, 3);
