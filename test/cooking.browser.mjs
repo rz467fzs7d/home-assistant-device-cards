@@ -32,7 +32,7 @@ try {
     assert.deepEqual(await page.locator(`${kind}-card .entry .appliance-icon`).evaluate(el => {
       const icon = el.querySelector("svg"), box = el.getBoundingClientRect(), glyph = icon.getBoundingClientRect();
       return [box.width, box.height, glyph.width, glyph.height, getComputedStyle(el).borderRadius, getComputedStyle(icon).stroke];
-    }), [28, 28, 28, 28, "0px", "none"]);
+    }), [32, 32, 32, 32, "0px", "none"]);
     assert.deepEqual(await page.locator(`${kind}-card .entry .appliance-icon`).evaluate(el => [getComputedStyle(el).backgroundColor, getComputedStyle(el).boxShadow]), ["rgba(0, 0, 0, 0)", "none"]);
     await page.locator(`${kind}-card .entry`).click();
     assert.equal(await page.locator(`${kind}-card .stop`).isDisabled(), true);

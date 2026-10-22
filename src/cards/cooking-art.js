@@ -3,7 +3,7 @@ export const cookingArtCss = `
 :host{container-type:inline-size}@container(max-width:160px){.entry{gap:8px}.entry .name{font-size:12px}}
 .machine{display:grid;place-items:center;width:144px;height:144px;margin:16px auto 24px;border-radius:50%;background:var(--secondary-background-color,#f5f5f5);color:var(--secondary-text-color,#888)}
 .machine svg{width:116px;height:116px}.appliance-drawing{display:block;fill:currentColor;stroke:none}
-.appliance-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:28px;height:28px;border-radius:0;color:var(--state-inactive-color,var(--secondary-text-color,#777));background:none;box-shadow:none}.appliance-icon svg{width:28px;height:28px}
+.appliance-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;border-radius:0;color:var(--state-inactive-color,var(--secondary-text-color,#777));background:none;box-shadow:none}.appliance-icon svg{width:32px;height:32px}
 header .appliance-icon,header .appliance-icon svg{width:24px;height:24px}header .appliance-icon{color:var(--primary-text-color,#444)}.entry.active>.appliance-icon{color:var(--state-sensor-active-color,var(--primary-color,#03a9f4))}
 `;
 const cabinet = '<path fill-rule="evenodd" d="M30 16h68a6 6 0 0 1 6 6v88a6 6 0 0 1-6 6H30a6 6 0 0 1-6-6V22a6 6 0 0 1 6-6Zm10 12v6h24v-6Zm46 0v6h6v-6ZM24 44v6h80v-6Zm12 18v34h56V62Z"/><path d="M48 68h6v22h-6zm13-2h6v24h-6zm13 2h6v22h-6z"/>';
