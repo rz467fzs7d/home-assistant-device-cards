@@ -40,12 +40,14 @@ try {
     if (width === 390) await page.locator(`${kind}-card dialog`).screenshot({ path: `test-results/${kind}-controls.png` });
     const bounds = await page.locator(`${kind}-card dialog`).boundingBox(); assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= width);
     assert.ok(await page.evaluate(() => window.card.shadowRoot.querySelector("dialog").scrollWidth <= window.card.shadowRoot.querySelector("dialog").clientWidth));
-    assert.ok(await page.locator(`${kind}-card .machine`).evaluate(el => el.getBoundingClientRect().height > 100 && el.querySelector("svg path").getBBox().width > 30 && getComputedStyle(el.querySelector("svg")).stroke === "none"));
+    assert.equal(await page.locator(`${kind}-card .machine`).count(), 0);
     page.once("dialog", dialog => dialog.accept()); await page.locator(`${kind}-card .start`).click();
     await page.waitForFunction(() => window.card.active && !window.card.busy);
     assert.equal(await page.locator(`${kind}-card .stop`).isDisabled(), false);
     assert.match(await page.locator(`${kind}-card .remaining`).textContent(), /25 Min/);
     assert.equal(await page.evaluate(() => window.calls.length), 1);
+    const fields = await page.locator(`${kind}-card .field[data-key] input`).evaluateAll(els => els.map(el => el.getBoundingClientRect().x));
+    if (fields.length > 1) assert.ok(Math.max(...fields) - Math.min(...fields) < 1, "numeric inputs align");
     await page.keyboard.press("Escape"); assert.deepEqual(errors, []); await page.close();
   }
   console.log("Cooking card checks passed at desktop, 390px and 320px; mock services only.");

@@ -54,7 +54,6 @@ class DishwasherCard extends CookingCard {
     const phase = this.status === "running" && this.available("progress_entity") ? label(this.state("progress_entity")) : "";
     root.querySelector(".status").textContent = status;
     root.querySelector(".summary").textContent = [status, phase].filter(Boolean).join(" · ");
-    root.querySelector(".machine").classList.toggle("spinning", this.status === "running" && ["pre_wash", "wash", "rinse"].includes(this.state("progress_entity")));
     root.querySelector(".controls").hidden = !this.config.mode_select_entity && !this.config.start_entity && !this.config.stop_entity;
     for (const action of ["start", "stop"]) {
       const button = root.querySelector(`.${action}`); button.hidden = false; button.disabled = !this.can(action);

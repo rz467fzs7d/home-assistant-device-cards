@@ -1,4 +1,4 @@
-import { cookingArt, cookingArtCss, applianceSvg } from "./cooking-art.js";
+import { cookingArtCss, applianceSvg } from "./cooking-art.js";
 
 const valid = value => value !== undefined && !["unknown", "unavailable", ""].includes(value);
 const normalize = value => String(value || "").trim().toLowerCase();
@@ -49,9 +49,10 @@ export class CookingCard extends HTMLElement {
       :host{display:block;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);color:var(--primary-text-color,#222)}*{box-sizing:border-box}[hidden]{display:none!important}button,input,select{font:inherit;color:inherit}button{cursor:pointer}button:disabled,input:disabled,select:disabled{opacity:.4;cursor:default}
       .entry{display:flex;align-items:center;gap:12px;width:100%;height:66px;padding:10px 12px;text-align:left;background:var(--ha-card-background,#fff);border:1px solid var(--divider-color,#ddd);border-radius:8px}.entry>ha-icon{--mdc-icon-size:28px;color:var(--state-inactive-color,#999)}.entry.active>ha-icon{color:var(--state-active-color,#ff9800)}.info{min-width:0;flex:1}.name{font-size:14px;font-weight:500;overflow-wrap:anywhere}.summary{font-size:12px;margin-top:3px;color:var(--secondary-text-color,#777);overflow-wrap:anywhere}
       dialog{width:min(420px,calc(100vw - 32px));max-height:85dvh;overflow:auto;padding:20px;border:1px solid var(--divider-color,#ddd);border-radius:8px;background:var(--ha-card-background,#fff);color:inherit}dialog::backdrop{background:#0007}header{display:flex;align-items:center;gap:10px}h2{flex:1;font-size:16px;font-weight:500;margin:0;overflow-wrap:anywhere}header ha-icon{--mdc-icon-size:24px}.control{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;border:0;border-radius:12px;background:var(--secondary-background-color,#f2f2f2)}.control ha-icon{--mdc-icon-size:20px}.close,.details{border-radius:50%;width:36px;height:36px}.status{text-align:center;font-size:22px;margin-top:24px}.remaining{text-align:center;font-size:12px;color:var(--secondary-text-color,#777);min-height:18px;margin-top:6px}.controls{display:flex;justify-content:center;gap:10px;margin-bottom:20px}.fields{display:grid;gap:12px}.field{display:flex;align-items:center;gap:8px;font-size:13px}.field>span{flex:1;min-width:0}input,select{height:40px;border:1px solid var(--divider-color,#ddd);border-radius:6px;background:var(--card-background-color,#fff);padding:0 8px;min-width:0;max-width:65%}input{width:84px}.facts{display:grid;gap:12px;margin-top:20px;font-size:12px}.fact{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:12px}.fact span:first-child{color:var(--secondary-text-color,#777)}.fact span:last-child{text-align:right;overflow-wrap:anywhere}.message{font-size:13px;color:var(--error-color,#db4437);overflow-wrap:anywhere;margin-top:16px}.message:empty{display:none}footer{display:flex;justify-content:flex-end;margin-top:16px}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--primary-color,#03a9f4);outline-offset:2px}
+      .controls{margin-top:20px}.field[data-key]{display:grid;grid-template-columns:minmax(0,1fr) 84px 30px 40px;gap:8px}.field[data-key] input{width:100%;max-width:none}.field .unit{text-align:left}.field:not([data-key]) select{flex:0 1 170px}
       ${cookingArtCss}
     </style><button class="entry" aria-haspopup="dialog">${entryIcon}<span class="info"><span class="name"></span><div class="summary"></div></span></button>
-    <dialog><header>${entryIcon}<h2></h2>${iconButton("close", "close", "Close")}</header><div class="status"></div><div class="remaining"></div>${cookingArt(this.config.kind, this.config.icon_variant)}<div class="controls">${iconButton("start", "play", "Start")}${iconButton("pause", "pause", "Pause")}${iconButton("resume", "play-pause", "Resume")}${iconButton("stop", "stop", "Stop")}</div><div class="fields"></div><div class="facts"></div><div class="message" role="alert"></div><footer>${iconButton("details", "information-outline", "Device Details")}</footer></dialog>`;
+    <dialog><header>${entryIcon}<h2></h2>${iconButton("close", "close", "Close")}</header><div class="status"></div><div class="remaining"></div><div class="controls">${iconButton("start", "play", "Start")}${iconButton("pause", "pause", "Pause")}${iconButton("resume", "play-pause", "Resume")}${iconButton("stop", "stop", "Stop")}</div><div class="fields"></div><div class="facts"></div><div class="message" role="alert"></div><footer>${iconButton("details", "information-outline", "Device Details")}</footer></dialog>`;
     const root = this.shadowRoot, dialog = root.querySelector("dialog");
     root.querySelector(".name").textContent = root.querySelector("h2").textContent = this.config.name;
     dialog.setAttribute("aria-label", this.config.name);
@@ -86,7 +87,6 @@ export class CookingCard extends HTMLElement {
     root.querySelector(".status").textContent = this.busy || status;
     root.querySelector(".remaining").textContent = remaining;
     root.querySelector(".entry").classList.toggle("active", this.active);
-    root.querySelector(".machine").classList.toggle("heating", ["busy", "cooking", "warming", "keeping warm"].includes(this.status));
     const display = root.querySelector(".rk-disp"); if (display) display.textContent = remaining ? `${left}m` : "--";
     for (const action of ["start", "pause", "resume", "stop"]) { const button = root.querySelector(`.${action}`); button.hidden = !this.config[`${action}_entity`]; button.disabled = !this.can(action); }
     for (const row of root.querySelectorAll(".field[data-key]")) {
@@ -100,7 +100,7 @@ export class CookingCard extends HTMLElement {
     }
     const select = root.querySelector("select"); if (select) select.disabled = !!this.busy || this.active || !this.available("state_entity");
     const facts = [];
-    for (const [key, title] of [["recipe_entity", "Recipe"], ["temperature_entity", "Temperature"], ["cover_entity", "Lid"], ["taste_entity", "Texture"], ["stage_entity", "Cooking Stage"]]) {
+    for (const [key, title] of [["temperature_entity", "Temperature"], ["cover_entity", "Lid"], ["taste_entity", "Texture"], ["stage_entity", "Cooking Stage"]]) {
       if (key === "stage_entity" && !["busy", "cooking"].includes(this.status)) continue;
       const entity = this._hass.states[this.config[key]];
       if (valid(entity?.state)) facts.push([title, `${decode(entity.state)}${entity.attributes?.unit_of_measurement ? ` ${entity.attributes.unit_of_measurement}` : ""}`]);
