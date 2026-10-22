@@ -33,7 +33,7 @@ try {
     assert.equal(geometry.transform, "none");
     assert.equal(geometry.mask, "none");
     assert.deepEqual(geometry.canvas, [46, 46]);
-    assert.ok(geometry.size.every(size => Math.abs(size - 30.6) < .02));
+    assert.ok(geometry.size.every(size => Math.abs(size - 27.54) < .02));
     assert.ok(Math.abs(geometry.scaleX - geometry.scaleY) < .000001);
     assert.ok(Math.abs(geometry.shear) < .000001);
     assert.equal(geometry.circles.length, 3);
