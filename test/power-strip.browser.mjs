@@ -56,10 +56,14 @@ try {
       const factor = parseFloat(style.maskSize) / box[2];
       const svg = single.shadowRoot.querySelector("svg"), body = svg.querySelector('mask>path[fill="white"]').getBBox();
       const singleFactor = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
-      return { widthRatio: (right - left) * factor / (body.width * singleFactor), heightRatio: value(rects[0], "height") * factor / (body.height * singleFactor) };
+      const circles = [...xml.querySelectorAll("circle")];
+      const rows = [...new Set(circles.map(circle => value(circle, "cy")))].sort((a, b) => a - b);
+      return { widthRatio: (right - left) * factor / (body.width * singleFactor), heightRatio: value(rects[0], "height") * factor / (body.height * singleFactor), rowGap: rows[1] - rows[0], radii: circles.map(circle => value(circle, "r")) };
     });
     assert.ok(Math.abs(proportions.widthRatio - 1) < .01, "six-slot and single-row visible artwork should have equal width");
-    assert.ok(Math.abs(proportions.heightRatio - 2) < .05, "six-slot visible artwork should be twice as tall");
+    assert.ok(proportions.heightRatio > 1.7 && proportions.heightRatio < 1.85, "six-slot enclosure should be compact, not forced to double height");
+    assert.ok(Math.abs(proportions.rowGap - 3.35) < .001, "reduce the solid band between socket rows");
+    assert.ok(proportions.radii.every(radius => radius === 1.393), "socket size and circular shape must stay unchanged");
     await page.locator("main").screenshot({ path: `test-results/strip-homekit-${width}-${deviceScaleFactor}.png` });
     await page.close();
   }
