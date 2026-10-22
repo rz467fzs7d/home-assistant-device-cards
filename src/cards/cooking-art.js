@@ -9,7 +9,7 @@ header .appliance-icon,header .appliance-icon svg{width:24px;height:24px}header 
 const cabinet = '<path fill-rule="evenodd" d="M30 16h68a6 6 0 0 1 6 6v88a6 6 0 0 1-6 6H30a6 6 0 0 1-6-6V22a6 6 0 0 1 6-6Zm10 12v6h24v-6Zm46 0v6h6v-6ZM24 44v6h80v-6Zm12 18v34h56V62Z"/><path d="M48 68h6v22h-6zm13-2h6v24h-6zm13 2h6v22h-6z"/>';
 const sink = '<path fill-rule="evenodd" d="M12 50h104v10h-6v44a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6V60h-6Zm16 12v34h28V62Zm40 0v34h32V62Z"/><path d="M32 50V30a16 16 0 0 1 32 0v8H54v-8a6 6 0 0 0-12 0v20Z"/>';
 const fryer = '<path fill-rule="evenodd" d="M39.6 16h48.8a14 14 0 0 1 14 14v68a14 14 0 0 1-14 14H39.6a14 14 0 0 1-14-14V30a14 14 0 0 1 14-14ZM46 35v6h36v-6ZM31.6 58v6h64.8v-6ZM59 76v16h10V76Z"/>';
-const cooker = '<path d="M28 50h72v40a20 20 0 0 1-20 20H48a20 20 0 0 1-20-20Zm-12 6h10v16H16Zm86 0h10v16h-10Z"/><path fill-rule="evenodd" d="M24 40h24V26h32v14h24v8H24Zm34-6v6h12v-6Z"/>';
+const cooker = '<path fill-rule="evenodd" d="M24 53Q64 65 104 53V96Q104 114 64 114T24 96ZM46 73V83H82V73Z"/><path d="M24 46V39Q24 27 64 27T104 39V46Q64 58 24 46ZM44 24V16Q44 12 48 12H76Q80 12 80 16V24ZM86 23V15Q86 11 90 11T94 15V25Z"/>';
 export function applianceSvg(kind, variant = "cabinet") {
   const paths = kind === "dishwasher" ? (variant === "sink" ? sink : cabinet) : kind === "air-fryer" ? fryer : cooker;
   return `<svg class="appliance-drawing" viewBox="0 0 128 128" aria-hidden="true">${paths}</svg>`;
