@@ -51,7 +51,7 @@ test("appearance changes only artwork, not outlet controls", () => {
     const css = card.shadowRoot.querySelector("style").textContent;
     const svg = decodeURIComponent(css.match(/mask:url\("([^"]+)"\)/)[1].split(",")[1]);
     assert.match(svg, /id="cutouts"/);
-    assert.ok(css.includes(`transform:scale(${icon_variant === "homekit" || icon_variant.endsWith("-tilted") ? 1.4 : 1})`));
+    assert.ok(css.includes(`transform:scale(${icon_variant === "homekit" ? 1.25 : icon_variant.endsWith("-tilted") ? 1.4 : 1})`));
     if (icon_variant === "homekit") { assert.match(svg, /viewBox="0 0 46 16"/); assert.doesNotMatch(svg, /rotate\(/); }
     if (icon_variant === "cn-three-cord-right-tilted") {
       assert.equal((svg.match(/<use /g) || []).length, 3);
