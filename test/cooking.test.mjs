@@ -59,6 +59,19 @@ test("pause and resume are mutually exclusive", async () => {
   hass.callService = async (...args) => { calls.push(args); state(args[2].entity_id === "button.pause" ? "Pause" : "Cooking"); };
   assert.equal(card.can("pause"), true); await card.operate("pause"); assert.equal(card.can("resume"), true); assert.equal(card.can("pause"), false); await card.operate("resume"); assert.equal(calls.length, 2);
 });
+test("number edits autosave once after typing, with no apply button; closing cancels pending edits", async () => {
+  const { card, hass, calls, window } = setup();
+  const input = card.shadowRoot.querySelector("input");
+  assert.equal(card.shadowRoot.querySelector(".apply"), null);
+  hass.callService = async (...args) => { calls.push(args); hass.states["number.temp"].state = String(args[2].value); card.hass = hass; };
+  input.value = "185"; input.dispatchEvent(new window.Event("input"));
+  input.value = "190"; input.dispatchEvent(new window.Event("input"));
+  assert.equal(calls.length, 0);
+  await new Promise(resolve => setTimeout(resolve, 800));
+  assert.equal(calls.length, 1); assert.equal(calls[0][2].value, 190);
+  input.value = "195"; input.dispatchEvent(new window.Event("input")); card.cancel();
+  await new Promise(resolve => setTimeout(resolve, 800)); assert.equal(calls.length, 1);
+});
 test("number range validation, dirty editing, exact readback", async () => {
   const { card, hass, calls } = setup(); const input = card.shadowRoot.querySelector("input");
   input.value = "201"; await card.setNumber("target_temperature_entity", input); assert.equal(calls.length, 0);
