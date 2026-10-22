@@ -33,6 +33,9 @@ try {
       const icon = el.querySelector("svg"), box = el.getBoundingClientRect(), glyph = icon.getBoundingClientRect();
       return [box.width, box.height, glyph.width, glyph.height, getComputedStyle(el).borderRadius, getComputedStyle(icon).stroke];
     }), [32, 32, 32, 32, "0px", "none"]);
+    if (kind === "air-fryer") assert.deepEqual(await page.locator(`${kind}-card .entry svg path`).evaluate(el => {
+      const box = el.getBBox(); return [box.width, box.height];
+    }), [88, 84]);
     assert.deepEqual(await page.locator(`${kind}-card .entry .appliance-icon`).evaluate(el => [getComputedStyle(el).backgroundColor, getComputedStyle(el).boxShadow]), ["rgba(0, 0, 0, 0)", "none"]);
     await page.locator(`${kind}-card .entry`).click();
     assert.deepEqual(await page.locator(`${kind}-card`).evaluate(el => {
