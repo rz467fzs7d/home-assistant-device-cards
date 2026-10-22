@@ -7,4 +7,6 @@ import "./cards/washer-editor.js";
 import "./cards/cooking-card.js";
 import "./cards/cooking-editor.js";
 import "./cards/dishwasher-card.js";
+import "./cards/plant-monitor-card.js";
+import "./cards/plant-monitor-editor.js";
 console.info(`Home Assistant Device Cards ${__VERSION__}`);

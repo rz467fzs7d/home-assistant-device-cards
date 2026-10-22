@@ -9,6 +9,26 @@ Screenshots show the actual cards with synthetic demo entities and states.
 
 ## Cards
 
+### Plant Monitor
+
+`custom:plant-monitor-card` combines moisture, conductivity, illuminance and
+temperature in one compact device card with a twin-probe silhouette.
+Click the device name for live details, or a reading for its native entity history.
+Missing readings show Unavailable; zero remains a valid reading. No services
+are called and no plant-health or care recommendations are inferred.
+
+```yaml
+type: custom:plant-monitor-card
+name: Plant Monitor
+moisture_entity: sensor.plant_soil_moisture
+conductivity_entity: sensor.plant_soil_ec
+illuminance_entity: sensor.plant_illuminance
+temperature_entity: sensor.plant_temperature
+```
+
+Bind at least one sensor. Units come from each entity, and the visual editor
+provides four independent sensor selectors.
+
 ### Dishwasher
 
 `custom:dishwasher-card` uses the same compact tile and dialog as the other
