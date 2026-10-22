@@ -49,9 +49,11 @@ Browser checks use synthetic entities and never start a real wash.
 ### Air Fryer And Pressure Cooker
 
 `custom:air-fryer-card` and `custom:pressure-cooker-card` open a compact control
-panel from a single status tile. Dialogs use original, unfilled SVG line art
-on a quiet circular background, following the native vacuum control panel.
+panel from a single status tile. Original solid SVG silhouettes share the
+native tile's circular icon background, sizing and theme colors.
 Existing Xiaomi Home entities remain the backend.
+
+<img src="docs/images/kitchen-icons.png" alt="Kitchen appliance icons alongside a native-style fan tile" width="440">
 
 <img src="docs/images/air-fryer-controls.png" alt="Air fryer controls with temperature and duration" width="350">
 <img src="docs/images/pressure-cooker-controls.png" alt="Pressure cooker controls with program and lid status" width="350">

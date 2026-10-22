@@ -1,14 +1,15 @@
-// Original theme-aware outline drawings shared by appliance tiles and dialogs.
+// Original theme-aware silhouettes shared by appliance tiles and dialogs.
 export const cookingArtCss = `
+:host{container-type:inline-size}@container(max-width:160px){.entry{gap:8px}.entry .name{font-size:12px}}
 .machine{display:grid;place-items:center;width:144px;height:144px;margin:16px auto 24px;border-radius:50%;background:var(--secondary-background-color,#f5f5f5);color:var(--secondary-text-color,#888)}
-.machine svg{width:116px;height:116px}.appliance-drawing{display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.appliance-icon{display:inline-flex;flex-shrink:0;width:28px;height:28px;color:var(--state-inactive-color,#999)}.appliance-icon svg{width:100%;height:100%;stroke-width:4.2}
-header .appliance-icon{width:24px;height:24px;color:var(--primary-text-color,#444)}.entry.active>.appliance-icon{color:var(--state-active-color,#ff9800)}
+.machine svg{width:116px;height:116px}.appliance-drawing{display:block;fill:currentColor;stroke:none}
+.appliance-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:40px;height:40px;border-radius:50%;color:var(--state-inactive-color,#9e9e9e);background:color-mix(in srgb,currentColor 16%,transparent)}.appliance-icon svg{width:24px;height:24px}
+header .appliance-icon{width:24px;height:24px;border-radius:0;background:none;color:var(--primary-text-color,#444)}.entry.active>.appliance-icon{color:var(--state-active-color,#ff9800)}
 `;
-const cabinet = '<rect x="30" y="18" width="68" height="94" rx="5"/><path d="M30 38h68M44 47h40M36 104h56"/><rect x="40" y="25" width="18" height="6" rx="1.5"/><circle cx="86" cy="28" r="1.5"/><path d="M42 68v25h44V68M42 85h44M50 68v17m9-17v17m10-17v17m9-17v17"/>';
-const sink = '<path d="M15 54h98M21 54v51h86V54M25 105v6m78-6v6M64 63v34M28 93h29M71 93h29"/><path d="M35 52V32a10 10 0 0 1 20 0v5m-4 0h8M30 44h10"/><rect x="28" y="61" width="29" height="27" rx="5"/><path d="M34 69v11m8-11v11m8-11v11M72 62h27v26H72zM77 68h17m-17 7h17m-17 7h17"/>';
-const fryer = '<rect x="32" y="20" width="64" height="88" rx="16"/><path d="M32 56h64M64 72v16"/>';
-const cooker = '<path d="M32 46h64v46a16 16 0 0 1-16 16H48a16 16 0 0 1-16-16ZM26 46h76"/><path d="M50 46V30h28v16M88 46V36"/>';
+const cabinet = '<path fill-rule="evenodd" d="M30 16h68a6 6 0 0 1 6 6v88a6 6 0 0 1-6 6H30a6 6 0 0 1-6-6V22a6 6 0 0 1 6-6Zm10 12v6h24v-6Zm46 0v6h6v-6ZM24 44v6h80v-6Zm12 18v34h56V62Z"/><path d="M48 68h6v22h-6zm13-2h6v24h-6zm13 2h6v22h-6z"/>';
+const sink = '<path fill-rule="evenodd" d="M12 50h104v10h-6v44a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6V60h-6Zm16 12v34h28V62Zm40 0v34h32V62Z"/><path d="M32 50V30a16 16 0 0 1 32 0v8H54v-8a6 6 0 0 0-12 0v20Z"/>';
+const fryer = '<path fill-rule="evenodd" d="M48 16h32a18 18 0 0 1 18 18v64a18 18 0 0 1-18 18H48a18 18 0 0 1-18-18V34a18 18 0 0 1 18-18Zm0 19v6h32v-6ZM36 58v6h56v-6Zm23 18v16h10V76Z"/>';
+const cooker = '<path d="M28 50h72v40a20 20 0 0 1-20 20H48a20 20 0 0 1-20-20Zm-12 6h10v16H16Zm86 0h10v16h-10Z"/><path fill-rule="evenodd" d="M24 40h24V26h32v14h24v8H24Zm34-6v6h12v-6Z"/>';
 export function applianceSvg(kind, variant = "cabinet") {
   const paths = kind === "dishwasher" ? (variant === "sink" ? sink : cabinet) : kind === "air-fryer" ? fryer : cooker;
   return `<svg class="appliance-drawing" viewBox="0 0 128 128" aria-hidden="true">${paths}</svg>`;

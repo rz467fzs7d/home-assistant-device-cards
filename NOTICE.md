@@ -1,6 +1,6 @@
 # Third-party artwork
 
-`src/cards/cooking-art.js` contains original SVG outline drawings.
+`src/cards/cooking-art.js` contains original SVG silhouette drawings.
 Versions 0.11 and 0.12 used silhouettes adapted from
 ADNPolymerase/ha-appliance-card v2.30.0 (MIT, Copyright (c) 2026 ADNPolymerase).
 Those silhouettes were replaced with original line art in version 0.13.

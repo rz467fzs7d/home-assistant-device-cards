@@ -15,7 +15,7 @@ test("action entities with unknown timestamp remain usable, unavailable entities
   const { card, hass } = setup(); assert.equal(card.can("start"), true);
   hass.states["button.start"].state = "unavailable"; card.hass = hass; assert.equal(card.can("start"), false);
 });
-test("original appliance outline is shared by tile, title and dialog without service calls", () => {
+test("original appliance silhouette is shared by tile, title and dialog without service calls", () => {
   const designs = [];
   for (const kind of ["air-fryer", "pressure-cooker"]) {
     const { card, calls, state } = setup(kind, kind === "air-fryer" ? "Standby" : "Idle");

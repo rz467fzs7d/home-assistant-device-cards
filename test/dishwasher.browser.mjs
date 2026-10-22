@@ -37,7 +37,7 @@ try {
     await page.screenshot({ path: `test-results/dishwasher-${variant}-off-${width}.png` });
     const bounds = await page.locator("dishwasher-card dialog").boundingBox(); assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= width);
     assert.ok(await page.evaluate(() => window.card.shadowRoot.querySelector("dialog").scrollWidth <= window.card.shadowRoot.querySelector("dialog").clientWidth));
-    assert.ok(await page.locator("dishwasher-card .machine svg").evaluate(el => el.getBoundingClientRect().height > 100 && el.querySelector("path").getBBox().width > 30 && getComputedStyle(el).fill === "none"));
+    assert.ok(await page.locator("dishwasher-card .machine svg").evaluate(el => el.getBoundingClientRect().height > 100 && el.querySelector("path").getBBox().width > 30 && getComputedStyle(el).stroke === "none"));
     await page.evaluate(() => { window.card._hass.states["sensor.status"].state = "cancel"; window.card._hass.states["select.mode"].state = "eco_wash"; window.card.update(); });
     await page.locator("dishwasher-card select").selectOption("fruit_wash");
     assert.equal(await page.evaluate(() => window.calls.length), 0);

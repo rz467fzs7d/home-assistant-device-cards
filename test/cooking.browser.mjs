@@ -29,13 +29,17 @@ try {
       hass.states["number.time"].attributes.unit_of_measurement = "min";
       card.hass = hass; document.querySelector("main").append(card);
     }, kind);
+    assert.deepEqual(await page.locator(`${kind}-card .entry .appliance-icon`).evaluate(el => {
+      const icon = el.querySelector("svg"), box = el.getBoundingClientRect(), glyph = icon.getBoundingClientRect();
+      return [box.width, box.height, glyph.width, glyph.height, getComputedStyle(el).borderRadius, getComputedStyle(icon).stroke];
+    }), [40, 40, 24, 24, "50%", "none"]);
     await page.locator(`${kind}-card .entry`).click();
     assert.equal(await page.locator(`${kind}-card .stop`).isDisabled(), true);
     await page.screenshot({ path: `test-results/${kind}-${width}.png` });
     if (width === 390) await page.locator(`${kind}-card dialog`).screenshot({ path: `test-results/${kind}-controls.png` });
     const bounds = await page.locator(`${kind}-card dialog`).boundingBox(); assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= width);
     assert.ok(await page.evaluate(() => window.card.shadowRoot.querySelector("dialog").scrollWidth <= window.card.shadowRoot.querySelector("dialog").clientWidth));
-    assert.ok(await page.locator(`${kind}-card .machine`).evaluate(el => el.getBoundingClientRect().height > 100 && el.querySelector("svg path").getBBox().width > 30 && getComputedStyle(el.querySelector("svg")).fill === "none"));
+    assert.ok(await page.locator(`${kind}-card .machine`).evaluate(el => el.getBoundingClientRect().height > 100 && el.querySelector("svg path").getBBox().width > 30 && getComputedStyle(el.querySelector("svg")).stroke === "none"));
     page.once("dialog", dialog => dialog.accept()); await page.locator(`${kind}-card .start`).click();
     await page.waitForFunction(() => window.card.active && !window.card.busy);
     assert.equal(await page.locator(`${kind}-card .stop`).isDisabled(), false);
