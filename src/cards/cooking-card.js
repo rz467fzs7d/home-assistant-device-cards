@@ -11,7 +11,7 @@ export class CookingCard extends HTMLElement {
     if (!/^sensor\./.test(config.state_entity || "")) throw new Error("state_entity must be a sensor");
     const kind = this.localName === "dishwasher-card" ? "dishwasher" : this.localName === "air-fryer-card" ? "air-fryer" : "pressure-cooker";
     for (const key of ["stop_entity", "pause_entity", "resume_entity"]) if (config[key] && !/^button\./.test(config[key])) throw new Error(`${key} must be a button`);
-    if (config.start_entity && !(kind === "pressure-cooker" ? /^notify\./ : /^button\./).test(config.start_entity)) throw new Error("Invalid start_entity domain");
+    if (config.start_entity && !(kind === "pressure-cooker" ? /^notify\./ : kind === "air-fryer" ? /^(button|notify)\./ : /^button\./).test(config.start_entity)) throw new Error("Invalid start_entity domain");
     for (const key of ["target_time_entity", "target_temperature_entity"]) if (config[key] && !/^number\./.test(config[key])) throw new Error(`${key} must be a number`);
     if (config.modes && (!Array.isArray(config.modes) || config.modes.some(m => !Number.isInteger(m.value) || typeof m.label !== "string"))) throw new Error("modes must contain integer values and labels");
     this.cancel();
@@ -32,6 +32,18 @@ export class CookingCard extends HTMLElement {
   }
   available(key) { return valid(this.state(key)); }
   actionAvailable(key) { const entity = this._hass?.states?.[this.config[key]]; return !!entity && entity.state !== "unavailable"; }
+  fryerStartParams() {
+    const action = this._hass?.states?.[this.config.start_entity];
+    const schema = String(action?.attributes?.["action params"] || "").replace(/\([^)]*\)|\s/g, "");
+    if (schema !== "[recipe-id,recipe-name,work-time,work-temp,appoint-time,food-quanty,preheat-switch]") return null;
+    const values = [];
+    for (const key of ["target_time_entity", "target_temperature_entity"]) {
+      const entity = this._hass?.states?.[this.config[key]], value = Number(entity?.state), attrs = entity?.attributes || {};
+      if (!valid(entity?.state) || !Number.isInteger(value) || !Number.isFinite(attrs.min) || !Number.isFinite(attrs.max) || !(attrs.step > 0) || value < attrs.min || value > attrs.max || Math.abs((value - attrs.min) / attrs.step - Math.round((value - attrs.min) / attrs.step)) > 1e-6) return null;
+      values.push(value);
+    }
+    return ["M1", "manual", ...values, 0, 1, 0];
+  }
   can(action) {
     if (this.busy || !this.available("state_entity") || !this.actionAvailable(`${action}_entity`)) return false;
     if (action === "stop") return this.active;
@@ -39,7 +51,7 @@ export class CookingCard extends HTMLElement {
     if (action === "resume") return this.paused && !this.fault;
     return !this.fault && ["fault_entity", "error_entity"].every(key => !this.config[key] || this.available(key)) && ["idle", "standby", "power off", "cooking finished", "preheat finished"].includes(this.status)
       && (!this.config.cover_entity || (this.available("cover_entity") && this.state("cover_entity") !== "有盖未锁好"))
-      && (this.config.kind === "air-fryer" || !!this.config.modes?.length);
+      && (this.config.kind === "air-fryer" ? (!this.config.start_entity?.startsWith("notify.") || !!this.fryerStartParams()) : !!this.config.modes?.length);
   }
   cancel() { this.editGeneration = (this.editGeneration || 0) + 1; clearTimeout(this.numberTimer); this.controller?.abort(); this.controller = null; this.busy = ""; }
   disconnectedCallback() { this.cancel(); this.shadowRoot?.querySelector("dialog")?.close(); }
@@ -147,14 +159,21 @@ export class CookingCard extends HTMLElement {
     const id = this.config[`${action}_entity`], initial = this.status;
     let data = { entity_id: id }, domain = "button", service = "press";
     if (id.startsWith("notify.")) {
-      const mode = Number(this.shadowRoot.querySelector("select")?.value);
-      if (!this.config.modes?.some(item => item.value === mode)) return;
-      domain = "notify"; service = "send_message"; data = { ...data, message: JSON.stringify([mode]) };
+      let params;
+      if (this.config.kind === "air-fryer") {
+        params = this.fryerStartParams();
+        if (!params) return;
+      } else {
+        const mode = Number(this.shadowRoot.querySelector("select")?.value);
+        if (!this.config.modes?.some(item => item.value === mode)) return;
+        params = [mode];
+      }
+      domain = "notify"; service = "send_message"; data = { ...data, message: JSON.stringify(params) };
     }
     await this.run(`${action.charAt(0).toUpperCase()}${action.slice(1)} Pending`, async signal => {
       await this.callService(domain, service, data, signal);
       if (signal.aborted) return;
-      await this.waitFor(() => this.available("state_entity") && this.status !== initial && (action === "stop" ? !this.active : action === "pause" ? this.paused : this.active && !this.paused), signal);
+      await this.waitFor(() => this.available("state_entity") && this.status !== initial && (action === "stop" ? !this.active : action === "pause" ? this.paused : action === "start" && this.config.kind === "air-fryer" && domain === "notify" ? this.status === "cooking" : this.active && !this.paused), signal);
     });
   }
   async saveNumbers() {

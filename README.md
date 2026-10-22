@@ -62,7 +62,7 @@ Existing Xiaomi Home entities remain the backend.
 type: custom:air-fryer-card
 name: Air Fryer
 state_entity: sensor.fryer_status
-start_entity: button.fryer_start
+start_entity: notify.fryer_start
 stop_entity: button.fryer_cancel
 pause_entity: button.fryer_pause
 resume_entity: button.fryer_resume
@@ -70,9 +70,16 @@ target_temperature_entity: number.fryer_temperature
 target_time_entity: number.fryer_duration
 remaining_entity: sensor.fryer_remaining
 fault_entity: sensor.fryer_fault
-recipe_entity: text.fryer_recipe
 finished_entity: event.fryer_finished
 ```
+
+For `careli.fryer.maf01`, bind Start to the custom `notify.*start_cook_a_3_1`
+action, not the standard start button. Its `action params` must match
+`[recipe-id, recipe-name, work-time, work-temp, appoint-time, food-quanty, preheat-switch]`.
+Start submits `["M1","manual",duration,temperature,0,1,0]` in one
+`notify.send_message` call and waits for `Cooking`. Invalid or unavailable
+temperature/duration values disable Start. Other fryers can still bind a button.
+Editing settings does not start cooking; Start retains its safety confirmation.
 
 ```yaml
 type: custom:pressure-cooker-card

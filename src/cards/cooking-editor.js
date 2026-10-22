@@ -15,12 +15,12 @@ class CookingEditor extends HTMLElement {
       select.value = this.config.icon_variant || "cabinet"; select.onchange = () => this.change("icon_variant", select.value);
       label.append(select); this.shadowRoot.append(label);
     }
-    const fields = [["state_entity", "Status", "sensor"], ["start_entity", "Start", fryer ? "button" : "notify"], ["stop_entity", "Stop", "button"], ["remaining_entity", "Remaining Time", "sensor"], ["fault_entity", "Fault", "sensor"], ["finished_entity", "Last Finished", "event"]];
+    const fields = [["state_entity", "Status", "sensor"], ["start_entity", "Start", fryer ? ["button", "notify"] : "notify"], ["stop_entity", "Stop", "button"], ["remaining_entity", "Remaining Time", "sensor"], ["fault_entity", "Fault", "sensor"], ["finished_entity", "Last Finished", "event"]];
     if (dishwasher) { fields[1][2] = "button"; fields.push(["progress_entity", "Wash Stage", "sensor"], ["mode_entity", "Current Program", "sensor"], ["mode_select_entity", "Program And Start (Midea E1)", "select"]); }
     else if (fryer) fields.push(["pause_entity", "Pause", "button"], ["resume_entity", "Resume", "button"], ["target_temperature_entity", "Target Temperature", "number"], ["target_time_entity", "Duration", "number"], ["recipe_entity", "Recipe", "text"]);
     else fields.push(["temperature_entity", "Temperature", "sensor"], ["cover_entity", "Lid", "sensor"], ["stage_entity", "Cooking Stage", "sensor"], ["taste_entity", "Texture", "sensor"], ["error_entity", "Detailed Fault", "sensor"]);
     for (const [key, title, domain] of fields) {
-      const selector = document.createElement("ha-selector"); selector.hass = this._hass; selector.selector = { entity: { domain: [domain] } }; selector.label = title; selector.value = this.config[key];
+      const selector = document.createElement("ha-selector"); selector.hass = this._hass; selector.selector = { entity: { domain: Array.isArray(domain) ? domain : [domain] } }; selector.label = title; selector.value = this.config[key];
       selector.addEventListener("value-changed", event => { event.stopPropagation(); this.change(key, event.detail.value); }); this.shadowRoot.append(selector);
     }
     if (!fryer && !dishwasher) {

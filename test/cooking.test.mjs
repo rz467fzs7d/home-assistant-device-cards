@@ -35,6 +35,28 @@ test("trim state, hide stale remaining and stage while idle, omit recipe", () =>
   assert.equal(card.status, "power off"); assert.equal(card.shadowRoot.querySelector(".remaining").textContent, "");
   assert.doesNotMatch(card.shadowRoot.querySelector(".facts").textContent, /Recipe|烤蜜薯/); assert.doesNotMatch(card.shadowRoot.querySelector(".facts").textContent, /保压/);
 });
+test("MAF01 Start sends all seven parameters together and requires Cooking readback", async () => {
+  const { card, hass, calls, state } = setup();
+  hass.states["notify.start"].attributes = { "action params": "[recipe-id(str), recipe-name(str), work-time(int), work-temp(int), appoint-time(int), food-quanty(int), preheat-switch(int)]" };
+  hass.states["number.time"] = { state: "5", attributes: { min: 1, max: 1440, step: 1 } };
+  hass.states["number.temp"].state = "190";
+  card.setConfig({ ...card.config, start_entity: "notify.start", target_time_entity: "number.time" }); card.hass = hass;
+  hass.callService = async (...args) => { calls.push(args); state("Cooking"); };
+  await card.operate("start");
+  assert.deepEqual(JSON.parse(JSON.stringify(calls)), [["notify", "send_message", { entity_id: "notify.start", message: '["M1","manual",5,190,0,1,0]' }]]);
+  assert.equal(card.error, "");
+  state("Standby"); calls.length = 0;
+  hass.callService = async (...args) => { calls.push(args); };
+  await card.operate("start");
+  assert.match(card.error, /not confirmed/); assert.equal(card.status, "standby");
+  for (const bad of ["unknown", "unavailable", "", "201", "NaN"]) {
+    hass.states["number.temp"].state = bad; card.hass = hass;
+    assert.equal(card.can("start"), false);
+  }
+  hass.states["number.temp"].state = "190";
+  hass.states["notify.start"].attributes["action params"] = "[work-temp(int), work-time(int)]"; card.hass = hass;
+  assert.equal(card.can("start"), false);
+});
 test("Start and Stop route through buttons and wait for readback", async () => {
   const { card, hass, calls, state } = setup();
   hass.callService = async (...args) => { calls.push(args); state(args[2].entity_id === "button.start" ? "Cooking" : "Standby"); };
