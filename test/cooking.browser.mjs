@@ -36,6 +36,7 @@ try {
     if (kind === "air-fryer") assert.ok(await page.locator(`${kind}-card .entry svg path`).evaluate(el => {
       const box = el.getBBox(); return Math.abs(box.width / box.height - 16 / 20) < .001;
     }), "air fryer silhouette matches Washer's 16:20 aspect ratio");
+    if (kind === "air-fryer") assert.match(await page.locator(`${kind}-card .entry svg path`).getAttribute("d"), /M64 41a10 10/, "air fryer uses its round front display");
     if (kind === "pressure-cooker") assert.ok(await page.locator(`${kind}-card .entry svg`).evaluate(el => {
       const box = el.getBBox(); return box.x === 24 && box.width === 80 && box.height > 100;
     }), "pressure cooker keeps a cylindrical body with top handle and valve, without side handles");
