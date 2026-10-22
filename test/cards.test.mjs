@@ -53,7 +53,15 @@ test("appearance changes only artwork, not outlet controls", () => {
     assert.match(svg, /id="cutouts"/);
     assert.ok(css.includes(`transform:scale(${icon_variant === "homekit" ? 1.25 : icon_variant.endsWith("-tilted") ? 1.4 : 1})`));
     assert.ok(css.includes(`rotate(${icon_variant === "homekit" ? -20 : 0}deg)`));
-    if (icon_variant === "homekit") { assert.match(svg, /viewBox="0 0 46 16"/); assert.doesNotMatch(svg, /rotate\(/); }
+    if (icon_variant === "homekit") {
+      const parser = new card.ownerDocument.defaultView.DOMParser();
+      const root = parser.parseFromString(svg, "image/svg+xml").documentElement;
+      const viewBox = root.getAttribute("viewBox").split(/\s+/).map(Number);
+      assert.equal(viewBox[2], viewBox[3], "source icon canvas must be square before rotation");
+      assert.equal(root.getAttribute("width"), root.getAttribute("height"));
+      assert.equal(root.getAttribute("preserveAspectRatio"), "xMidYMid meet");
+      assert.doesNotMatch(svg, /rotate\(|scale\(/, "raw artwork must not be stretched or rotated");
+    }
     if (icon_variant === "cn-three-cord-right-tilted") {
       assert.equal((svg.match(/<use /g) || []).length, 3);
       assert.match(svg, /rotate\(-25\) scale\(\.95\)/);
