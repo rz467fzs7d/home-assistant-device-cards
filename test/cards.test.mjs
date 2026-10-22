@@ -65,6 +65,7 @@ test("appearance changes only artwork, not outlet controls", () => {
       assert.equal(root.getAttribute("preserveAspectRatio"), "xMidYMid meet");
       assert.doesNotMatch(svg, /scale\(/, "raw artwork must not be stretched");
       assert.doesNotMatch(svg, /rotate\(/, "HomeKit icon must remain horizontal");
+      assert.doesNotMatch(svg, /H45\.9197/, "single-row icon must not include the cord");
       assert.equal(root.querySelectorAll("circle").length, 3);
       assert.equal(root.querySelectorAll("ellipse").length, 0);
       assert.ok(card.shadowRoot.querySelector(".homekit>svg"));
