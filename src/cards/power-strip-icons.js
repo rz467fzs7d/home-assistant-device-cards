@@ -8,6 +8,7 @@ import fiveCord from "../assets/powerstrip-cn-five-inline-cord.svg";
 import fourLeft from "../assets/powerstrip-cn-four-inline-cord-left.svg";
 import fiveLeft from "../assets/powerstrip-cn-five-inline-cord-left.svg";
 import fiveTilted from "../assets/powerstrip-cn-five-inline-cord-tilted.svg";
+import threeTilted from "../assets/powerstrip-cn-three-inline-cord-tilted.svg";
 
 export const powerStripIcons = {
   default: { label: "Original", svg: original },
@@ -18,6 +19,7 @@ export const powerStripIcons = {
   "cn-four-cord-right": { label: "4 Sockets - Right Cord", svg: fourCord },
   "cn-five-cord-right": { label: "5 Sockets - Right Cord", svg: fiveCord },
   "cn-five-cord-right-tilted": { label: "5 Sockets - Tilted Right Cord", svg: fiveTilted },
+  "cn-three-cord-right-tilted": { label: "3 Sockets - Tilted Right Cord", svg: threeTilted },
   "cn-four-cord-left": { label: "4 Sockets - Left Cord", svg: fourLeft },
   "cn-five-cord-left": { label: "5 Sockets - Left Cord", svg: fiveLeft },
 };
