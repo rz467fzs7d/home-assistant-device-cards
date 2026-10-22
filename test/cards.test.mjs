@@ -51,6 +51,7 @@ test("appearance changes only artwork, not outlet controls", () => {
     const css = card.shadowRoot.querySelector("style").textContent;
     const svg = decodeURIComponent(css.match(/mask:url\("([^"]+)"\)/)[1].split(",")[1]);
     assert.match(svg, /id="cutouts"/);
+    assert.ok(css.includes(`transform:scale(${icon_variant === "cn-five-cord-right-tilted" ? 1.4 : 1})`));
   }
   assert.throws(() => card.setConfig({ entities: ["switch.one"], icon_variant: "bogus" }), /icon_variant/);
 });
