@@ -76,6 +76,8 @@ test("debug preserves raw cancel, timestamps, local selection and exact blocked 
   card.hass = hass;
   const debug = card.shadowRoot.querySelector(".status-debug");
   assert.ok(debug);
+  assert.equal(debug.open, false);
+  assert.equal(debug.querySelector("summary").textContent, "Debug");
   debug.open = true;
   let data = JSON.parse(debug.querySelector("pre").textContent);
   assert.equal(data.entities.state_entity.state, "cancel");
@@ -92,6 +94,13 @@ test("debug preserves raw cancel, timestamps, local selection and exact blocked 
   data = JSON.parse(debug.querySelector("pre").textContent);
   assert.equal(data.transitions.at(-1).status, "running");
   assert.ok(data.start.blocked_reasons.includes("Device State Does Not Allow Start"));
+});
+test("debug collapses every time the device panel opens", () => {
+  const { card } = setup();
+  const debug = card.shadowRoot.querySelector(".status-debug");
+  debug.open = true;
+  card.shadowRoot.querySelector(".entry").click();
+  assert.equal(debug.open, false);
 });
 test("debug separates service acknowledgment from confirmed device state and retains errors", async () => {
   const { card, hass } = setup();

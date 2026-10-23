@@ -44,8 +44,10 @@ class DishwasherCard extends CookingCard {
     debugStyle.textContent = '.status-debug{margin-top:16px;border-top:1px solid var(--divider-color,#ddd);padding-top:12px;font-size:12px;min-width:0}.status-debug summary{cursor:pointer;font-weight:500}.status-debug pre{font-family:monospace;font-size:11px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;max-height:280px;overflow:auto;margin:10px 0 0}.status-debug summary:focus-visible{outline:2px solid var(--primary-color,#03a9f4)}';
     this.shadowRoot.append(debugStyle);
     const debug = document.createElement("details"); debug.className = "status-debug";
-    debug.innerHTML = '<summary>Status Debug</summary><pre></pre>';
+    debug.innerHTML = '<summary>Debug</summary><pre></pre>';
     this.shadowRoot.querySelector("footer").before(debug);
+    const entry = this.shadowRoot.querySelector(".entry"), open = entry.onclick;
+    entry.onclick = event => { debug.open = false; open(event); };
     if (this.config.mode_select_entity) {
       const row = document.createElement("label"); row.className = "program-field";
       row.innerHTML = '<span>Program</span><select class="program-select" aria-label="Program"></select>';

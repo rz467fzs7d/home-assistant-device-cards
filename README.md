@@ -69,7 +69,7 @@ the right. The real household dishwasher has no exposed Stop action, so its
 Stop button is disabled and explains that limitation in its tooltip.
 Browser checks use synthetic entities and never start a real wash.
 
-The dialog includes an expandable **Status Debug** snapshot: exact entity IDs,
+The dialog includes a **Debug** snapshot, collapsed each time it opens: exact entity IDs,
 raw states, attributes, HA change/update/report timestamps, start blockers,
 locally selected versus reported program, and up to 30 state transitions observed
 by this card. The last command records service acknowledgment separately from
