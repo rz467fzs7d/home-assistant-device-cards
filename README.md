@@ -69,6 +69,16 @@ the right. The real household dishwasher has no exposed Stop action, so its
 Stop button is disabled and explains that limitation in its tooltip.
 Browser checks use synthetic entities and never start a real wash.
 
+The dialog includes an expandable **Status Debug** snapshot: exact entity IDs,
+raw states, attributes, HA change/update/report timestamps, start blockers,
+locally selected versus reported program, and up to 30 state transitions observed
+by this card. The last command records service acknowledgment separately from
+the operation's Running/Delay confirmation, including service failures and
+confirmation timeouts. These are current-card-session diagnostics, not backend
+logs, device packet timestamps or persistent history. Missing fault entities do
+not prove that the device has no faults. E1's raw `cancel` status remains unchanged
+in diagnostics; the main display calls it **Stopped**, not Idle or a new error.
+
 ### Air Fryer And Pressure Cooker
 
 `custom:air-fryer-card` and `custom:pressure-cooker-card` open a compact control

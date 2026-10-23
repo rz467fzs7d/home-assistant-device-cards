@@ -46,6 +46,13 @@ try {
     await page.waitForFunction(() => window.card.status === "running" && !window.card.busy);
     assert.equal(await page.evaluate(() => window.calls.length), 1);
     assert.match(await page.locator("dishwasher-card .summary").textContent(), /Wash/);
+    await page.locator("dishwasher-card .status-debug summary").click();
+    const snapshot = JSON.parse(await page.locator("dishwasher-card .status-debug pre").textContent());
+    assert.equal(snapshot.entities.state_entity.state, "running");
+    assert.equal(snapshot.last_operation.result, "Confirmed");
+    assert.equal(snapshot.last_command.result, "Acknowledged");
+    assert.ok(await page.evaluate(() => { const dialog = window.card.shadowRoot.querySelector("dialog"); return dialog.scrollWidth <= dialog.clientWidth; }));
+    await page.screenshot({ path: `test-results/dishwasher-debug-${variant}-${width}.png` });
     await page.keyboard.press("Escape"); assert.deepEqual(errors, []); await page.close();
   }
   console.log("Dishwasher mock controls and responsive checks passed at desktop, 390px and 320px.");

@@ -69,3 +69,44 @@ test("start waits for Running readback and surfaces cloud/service errors", async
     await card.operate("start"); assert.match(card.error, fail ? /offline/ : /not confirmed/); assert.equal(card.status, "cancel");
   }
 });
+test("debug preserves raw cancel, timestamps, local selection and exact blocked reasons without side effects", () => {
+  const { card, hass, calls, window } = setup("cancel", "neutral_gear");
+  hass.states["sensor.status"].last_changed = "2026-10-23T02:23:12Z";
+  hass.states["sensor.status"].attributes = { raw: '<img src=x onerror="alert(1)">' };
+  card.hass = hass;
+  const debug = card.shadowRoot.querySelector(".status-debug");
+  assert.ok(debug);
+  debug.open = true;
+  let data = JSON.parse(debug.querySelector("pre").textContent);
+  assert.equal(data.entities.state_entity.state, "cancel");
+  assert.equal(data.entities.state_entity.last_changed, "2026-10-23T02:23:12Z");
+  assert.ok(data.start.blocked_reasons.includes("Select A Wash Program"));
+  assert.equal(data.last_operation, null);
+  assert.equal(card.shadowRoot.querySelector(".status").textContent, "Stopped");
+  const select = card.shadowRoot.querySelector(".program-select"); select.value = "eco_wash"; select.dispatchEvent(new window.Event("change"));
+  data = JSON.parse(debug.querySelector("pre").textContent);
+  assert.equal(data.start.enabled, true); assert.equal(data.start.selected_program, "eco_wash");
+  assert.equal(data.entities.mode_select_entity.state, "neutral_gear");
+  assert.equal(debug.open, true); assert.equal(debug.querySelector("img"), null); assert.equal(calls.length, 0);
+  hass.states["sensor.status"].state = "running"; card.hass = hass;
+  data = JSON.parse(debug.querySelector("pre").textContent);
+  assert.equal(data.transitions.at(-1).status, "running");
+  assert.ok(data.start.blocked_reasons.includes("Device State Does Not Allow Start"));
+});
+test("debug separates service acknowledgment from confirmed device state and retains errors", async () => {
+  const { card, hass } = setup();
+  await card.operate("start");
+  let data = JSON.parse(card.shadowRoot.querySelector(".status-debug pre").textContent);
+  assert.equal(data.last_operation.result, "Failed");
+  assert.equal(data.last_command.result, "Acknowledged");
+  assert.match(data.last_operation.error, /not confirmed/);
+  assert.equal(data.last_command.request.data.option, "eco_wash");
+  hass.callService = async () => { throw new Error("Device offline"); };
+  await card.operate("start");
+  data = JSON.parse(card.shadowRoot.querySelector(".status-debug pre").textContent);
+  assert.equal(data.last_command.result, "Failed"); assert.match(data.last_command.error, /offline/);
+  hass.callService = async () => { hass.states["sensor.status"].state = "running"; card.hass = hass; };
+  await card.operate("start");
+  data = JSON.parse(card.shadowRoot.querySelector(".status-debug pre").textContent);
+  assert.equal(data.last_operation.result, "Confirmed"); assert.equal(data.last_operation.error, null);
+});
