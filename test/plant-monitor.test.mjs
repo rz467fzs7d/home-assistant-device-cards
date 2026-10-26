@@ -22,11 +22,21 @@ test("plant monitor registers and combines four real readings, including zero", 
   const { window, card, calls } = setup();
   assert.ok(window.customCards.some(item => item.type === "plant-monitor-card"));
   assert.equal(card.shadowRoot.querySelectorAll(".metric").length, 4);
-  assert.equal(card.shadowRoot.querySelector('[data-key="illuminance_entity"] .value').textContent, "0");
+  assert.equal(card.shadowRoot.querySelector('.metric[data-key="illuminance_entity"] .value').textContent, "0");
   assert.match(card.shadowRoot.textContent, /215/);
-  assert.equal(card.shadowRoot.querySelector('[data-key="conductivity_entity"] .unit').textContent, "\u03bcS/cm");
+  assert.equal(card.shadowRoot.querySelector('.metric[data-key="conductivity_entity"] .unit').textContent, "\u03bcS/cm");
   assert.equal(card.shadowRoot.querySelectorAll(".device-art svg").length, 2);
   assert.equal(calls.length, 0);
+});
+test("plant monitor is one ordinary tile with four readings visible", () => {
+  const { card } = setup();
+  assert.equal(card.getCardSize(), 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(card.getGridOptions())), { columns: 6, rows: 1, min_columns: 3 });
+  assert.equal(card.shadowRoot.querySelector(".entry .metric"), null);
+  assert.equal(card.shadowRoot.querySelectorAll(".entry .tile-reading").length, 4);
+  assert.equal(card.shadowRoot.querySelector('.tile-reading[data-key="moisture_entity"] .tile-value').textContent, "54");
+  assert.equal(card.shadowRoot.querySelector('.tile-reading[data-key="illuminance_entity"] .tile-value').textContent, "0");
+  assert.equal(card.shadowRoot.querySelectorAll("dialog .detail").length, 4);
 });
 test("unavailable data is explicit, missing entities cannot open another sensor", () => {
   const { card, hass, calls } = setup();
@@ -35,10 +45,11 @@ test("unavailable data is explicit, missing entities cannot open another sensor"
   hass.states["sensor.temp"].state = "not-a-number";
   card.hass = hass;
   for (const key of ["moisture_entity", "conductivity_entity", "temperature_entity"]) {
-    assert.equal(card.shadowRoot.querySelector(`[data-key="${key}"] .value`).textContent, "Unavailable");
+    assert.equal(card.shadowRoot.querySelector(`.metric[data-key="${key}"] .value`).textContent, "Unavailable");
+    assert.equal(card.shadowRoot.querySelector(`.tile-reading[data-key="${key}"] .tile-value`).textContent, "\u2014");
   }
-  assert.equal(card.shadowRoot.querySelector('[data-key="conductivity_entity"]').disabled, true);
-  assert.equal(card.shadowRoot.querySelector('[data-key="moisture_entity"]').disabled, false);
+  assert.equal(card.shadowRoot.querySelector('.metric[data-key="conductivity_entity"]').disabled, true);
+  assert.equal(card.shadowRoot.querySelector('.metric[data-key="moisture_entity"]').disabled, false);
   assert.equal(calls.length, 0);
 });
 test("identity opens live details; each reading opens only its own entity history", () => {

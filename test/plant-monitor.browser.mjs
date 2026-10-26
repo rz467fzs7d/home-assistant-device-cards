@@ -6,7 +6,7 @@ await mkdir("test-results", { recursive: true });
 try {
   for (const width of [320, 390, 1280]) {
     const page = await browser.newPage({ viewport: { width, height: 600 } });
-    await page.setContent('<style>body{margin:16px;font-family:Arial;background:#fafafa}main{max-width:440px}</style><main></main>');
+    await page.setContent('<style>body{margin:16px;font-family:Arial;background:#fafafa}main{max-width:440px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}</style><main></main>');
     await page.addScriptTag({ content: await readFile("dist/home-assistant-device-cards.js", "utf8"), type: "module" });
     await page.evaluate(() => {
       const card = document.createElement("plant-monitor-card");
@@ -16,9 +16,12 @@ try {
     });
     const geometry = await page.locator("plant-monitor-card").evaluate(el => {
       const root = el.shadowRoot, bounds = root.querySelector(".entry").getBoundingClientRect();
-      return { overflow: document.documentElement.scrollWidth > innerWidth, fits: [...root.querySelectorAll(".metric,.identity")].every(node => node.getBoundingClientRect().right <= bounds.right && node.scrollWidth <= node.clientWidth), height: bounds.height };
+      const items = [...root.querySelectorAll(".tile-reading,.identity")].map(node => ({text:node.textContent,width:node.clientWidth,scroll:node.scrollWidth,right:node.getBoundingClientRect().right}));
+      return { overflow: document.documentElement.scrollWidth > innerWidth, fits: items.every(node => node.right <= bounds.right && node.scroll <= node.width), height: bounds.height, items };
     });
-    assert.equal(geometry.overflow, false); assert.equal(geometry.fits, true); assert.ok(geometry.height < 110);
+    assert.equal(geometry.overflow, false); assert.equal(geometry.fits, true, JSON.stringify(geometry)); assert.equal(geometry.height, 66);
+    assert.equal(await page.locator('plant-monitor-card .entry .metric').count(), 0);
+    assert.equal(await page.locator('plant-monitor-card .entry .tile-reading').count(), 4);
     await page.locator("plant-monitor-card").screenshot({ path: `test-results/plant-${width}.png` });
     await page.locator("plant-monitor-card .identity").click();
     assert.equal(await page.locator("plant-monitor-card dialog").evaluate(node => node.open), true);

@@ -14,9 +14,10 @@ The Plant Monitor screenshot below shows live Home Assistant readings.
 
 ![Plant Monitor alongside balcony devices](docs/images/plant-monitor-live.png)
 
-`custom:plant-monitor-card` combines moisture, conductivity, illuminance and
-temperature in one compact device card with a twin-probe silhouette.
-Click the device name for live details, or a reading for its native entity history.
+`custom:plant-monitor-card` uses the same half-width, single-row tile size as
+Washer and Power Strip, with a twin-probe silhouette and four readings in a compact
+two-by-two layout. Click the tile for moisture, conductivity, illuminance and
+temperature details; each reading opens its native entity history.
 Missing readings show Unavailable; zero remains a valid reading. No services
 are called and no plant-health or care recommendations are inferred.
 

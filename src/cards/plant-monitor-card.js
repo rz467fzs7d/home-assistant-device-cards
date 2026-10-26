@@ -16,8 +16,8 @@ class PlantMonitorCard extends HTMLElement {
     this.render(); this.update();
   }
   set hass(hass) { this._hass = hass; this.update(); }
-  getCardSize() { return 2; }
-  getGridOptions() { return { columns: 12, rows: 2, min_columns: 6 }; }
+  getCardSize() { return 1; }
+  getGridOptions() { return { columns: 6, rows: 1, min_columns: 3 }; }
   history(key) {
     const entityId = this.config[key];
     if (!this._hass?.states[entityId]) return;
@@ -35,32 +35,32 @@ class PlantMonitorCard extends HTMLElement {
       metric.disabled = !state;
       metric.querySelector(".value").textContent = value;
       metric.querySelector(".unit").textContent = unit;
-      const detail = this.shadowRoot.querySelector(`.detail[data-key="${key}"]`);
-      detail.disabled = !state;
-      detail.querySelector(".reading").textContent = [value, unit].filter(Boolean).join(" ");
+      const tile = this.shadowRoot.querySelector(`.tile-reading[data-key="${key}"]`);
+      tile.querySelector(".tile-value").textContent = valid ? value : "\u2014";
+      tile.querySelector(".tile-unit").textContent = unit;
+      tile.title = `${fields.find(([field]) => field === key)[1]}: ${value} ${unit}`.trim();
+      tile.setAttribute("aria-label", tile.title);
     }
   }
   render() {
     this.shadowRoot.innerHTML = `<style>
-      :host{display:block;letter-spacing:0}*{box-sizing:border-box}button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;text-align:left}button:disabled{cursor:default;color:var(--secondary-text-color,#777)}button:focus-visible{outline:2px solid var(--primary-color,#03a9f4);outline-offset:-2px}
-      .entry{display:grid;grid-template-columns:minmax(110px,1fr) minmax(180px,1.5fr);border:1px solid var(--ha-card-border-color,var(--divider-color,#ddd));border-radius:8px;background:var(--ha-card-background,var(--card-background-color,#fff));color:var(--primary-text-color,#222);min-height:88px;overflow:hidden}
-      .identity{display:flex;align-items:center;gap:10px;padding:12px;min-width:0}.device-art{display:inline-flex;width:28px;height:32px;flex-shrink:0;color:var(--state-icon-color,#999)}.device-art svg{width:100%;height:100%;preserve-aspect-ratio:xMidYMid meet}.name{font-size:14px;font-weight:500;overflow-wrap:anywhere}
-      .metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:7px 8px 7px 0;gap:2px 6px}.metric{display:grid;grid-template-columns:18px minmax(0,1fr);align-items:center;gap:5px;padding:3px 2px;min-width:0}.metric ha-icon{--mdc-icon-size:17px;color:var(--primary-color,#03a9f4)}.label{display:block;font-size:10px;color:var(--secondary-text-color,#666)}.reading-small{display:flex;align-items:baseline;gap:3px;flex-wrap:wrap;font-size:12px}.unit{font-size:10px;color:var(--secondary-text-color,#666)}
+      :host{display:block;letter-spacing:0;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif)}*{box-sizing:border-box}button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;text-align:left}button:disabled{cursor:default;color:var(--secondary-text-color,#777)}button:focus-visible{outline:2px solid var(--primary-color,#03a9f4);outline-offset:-2px}
+      .entry{display:flex;align-items:center;gap:12px;width:100%;height:66px;padding:8px 12px;min-width:0;border:1px solid var(--ha-card-border-color,var(--divider-color,#ddd));border-radius:8px;background:var(--ha-card-background,var(--card-background-color,#fff));color:var(--primary-text-color,#222)}
+      .entry{gap:8px;padding:8px}.info{min-width:0;flex:1}.device-art{display:inline-flex;width:24px;height:28px;flex-shrink:0;color:var(--state-icon-color,#999)}.device-art svg{width:100%;height:100%}.name{display:block;font-size:14px;line-height:16px;font-weight:500;overflow-wrap:anywhere}.readings{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);column-gap:4px;margin-top:3px;color:var(--secondary-text-color,#777)}.tile-reading{display:flex;align-items:baseline;gap:2px;min-width:0;white-space:nowrap;line-height:13px}.tile-value{font-size:11px}.tile-unit{font-size:9px}
       dialog{width:340px;max-width:calc(100vw - 32px);border:1px solid var(--divider-color,#ddd);border-radius:8px;padding:16px;background:var(--card-background-color,#fff);color:var(--primary-text-color,#222)}dialog::backdrop{background:#0006}header{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:16px}header .device-art{width:24px;height:28px}.close{margin-left:auto;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:var(--secondary-background-color,#eee)}.detail{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;font-size:14px;border-bottom:1px solid var(--divider-color,#eee)}.detail:last-child{border:0}.reading{text-align:right}
-      @media(max-width:350px){.entry{grid-template-columns:minmax(94px,1fr) minmax(165px,1.6fr)}.identity{gap:5px;padding:8px}.name{font-size:13px}.device-art{width:24px}.metrics{gap:2px}}
-    </style><div class="entry"><button class="identity"><span class="device-art">${art}</span><span class="name"></span></button><div class="metrics"></div></div><dialog><header><span class="device-art">${art}</span><span class="title"></span><button class="close" aria-label="Close"><ha-icon icon="mdi:close"></ha-icon></button></header><div class="details"></div></dialog>`;
+    </style><button class="entry identity" aria-haspopup="dialog"><span class="device-art">${art}</span><span class="info"><span class="name"></span><span class="readings"></span></span></button><dialog><header><span class="device-art">${art}</span><span class="title"></span><button class="close" aria-label="Close"><ha-icon icon="mdi:close"></ha-icon></button></header><div class="details"></div></dialog>`;
     const name = this.config.name || "Plant Monitor";
     this.shadowRoot.querySelector(".name").textContent = name;
     this.shadowRoot.querySelector(".title").textContent = name;
     const dialog = this.shadowRoot.querySelector("dialog");
     this.shadowRoot.querySelector(".identity").onclick = () => dialog.showModal();
     this.shadowRoot.querySelector(".close").onclick = () => dialog.close();
-    for (const [key, label, icon] of fields) {
-      const metric = document.createElement("button"); metric.className = "metric"; metric.dataset.key = key;
-      metric.innerHTML = `<ha-icon icon="${icon}"></ha-icon><span><span class="label">${label}</span><span class="reading-small"><span class="value"></span><span class="unit"></span></span></span>`;
-      metric.onclick = () => this.history(key); this.shadowRoot.querySelector(".metrics").append(metric);
-      const detail = document.createElement("button"); detail.className = "detail"; detail.dataset.key = key;
-      detail.innerHTML = `<span>${label}</span><span class="reading"></span>`;
+    for (const [key, label] of fields) {
+      const tile = document.createElement("span"); tile.className = "tile-reading"; tile.dataset.key = key;
+      tile.innerHTML = '<span class="tile-value"></span><span class="tile-unit"></span>';
+      this.shadowRoot.querySelector(".readings").append(tile);
+      const detail = document.createElement("button"); detail.className = "detail metric"; detail.dataset.key = key;
+      detail.innerHTML = `<span>${label}</span><span class="reading"><span class="value"></span> <span class="unit"></span></span>`;
       detail.onclick = () => this.history(key); this.shadowRoot.querySelector(".details").append(detail);
     }
   }
