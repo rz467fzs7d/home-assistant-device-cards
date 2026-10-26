@@ -17,9 +17,11 @@ try {
     const geometry = await page.locator("plant-monitor-card").evaluate(el => {
       const root = el.shadowRoot, bounds = root.querySelector(".entry").getBoundingClientRect();
       const items = [...root.querySelectorAll(".tile-reading,.identity")].map(node => ({text:node.textContent,width:node.clientWidth,scroll:node.scrollWidth,right:node.getBoundingClientRect().right}));
-      return { overflow: document.documentElement.scrollWidth > innerWidth, fits: items.every(node => node.right <= bounds.right && node.scroll <= node.width), height: bounds.height, items };
+      return { overflow: document.documentElement.scrollWidth > innerWidth, fits: items.every(node => node.right <= bounds.right && node.scroll <= node.width), height: bounds.height, items, textOffset: root.querySelector('.name').getBoundingClientRect().left - bounds.left, iconWidth: root.querySelector('.device-art').getBoundingClientRect().width };
     });
     assert.equal(geometry.overflow, false); assert.equal(geometry.fits, true, JSON.stringify(geometry)); assert.equal(geometry.height, 66);
+    assert.equal(geometry.textOffset, 57);
+    assert.equal(geometry.iconWidth, 32);
     assert.equal(await page.locator('plant-monitor-card .entry .metric').count(), 0);
     assert.equal(await page.locator('plant-monitor-card .entry .tile-reading').count(), 4);
     await page.locator("plant-monitor-card").screenshot({ path: `test-results/plant-${width}.png` });
