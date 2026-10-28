@@ -1,4 +1,4 @@
-const art = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M6 2h12a2 2 0 0 1 2 2v2H4V4a2 2 0 0 1 2-2ZM4 8h16l1 5c.8 5.1-3.1 9-9 9s-9.8-3.9-9-9Zm3.4 3-.5 2.8c-.5 2.9 1.7 4.9 5.1 4.9s5.6-2 5.1-4.9l-.5-2.8Z"/></svg>';
+const art = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m4.2 12.6-.8-5.7C3 3.6 4.9 1.3 7.9 1.1c3.3-.2 5.9 2.3 6.3 5.5l.6 5.6Z"/><path fill="currentColor" fill-rule="evenodd" d="m4.1 14 9.7-.3 6.5 3.1c2.7 1.4 2.7 3.2.1 4.5-2.8 1.4-7.5 1.5-10.6.1L3 18.2v-2.1Zm3.5 1.8 4.3 2.1c2 .9 5.4 1 7.4.1l-6.1-2.8Z"/></svg>';
 class ToiletSeatCard extends HTMLElement {
   static getConfigElement() { return document.createElement("toilet-seat-card-editor"); }
   static getStubConfig() { return { entity: "", name: "Toilet Seat" }; }
