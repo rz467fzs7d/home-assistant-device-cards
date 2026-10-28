@@ -37,6 +37,8 @@ try {
       await page.locator("adguard-card .identity").click();
       const dialog = page.locator("adguard-card dialog");
       assert.equal(await dialog.evaluate(n => n.open), true);
+      assert.equal(await dialog.getByRole("switch").count(), 5);
+      assert.equal(await dialog.getByRole("switch", { name: "Query Log", exact: true }).count(), 0);
       assert.equal(await dialog.evaluate(n => n.scrollWidth > n.clientWidth), false);
       assert.equal(await dialog.evaluate(n => { const b = n.getBoundingClientRect(); return b.left >= 0 && b.right <= innerWidth && b.bottom <= innerHeight; }), true);
       assert.equal(await page.evaluate(() => calls.length), 0);

@@ -13,16 +13,24 @@ function setup(config = {}) {
   card.setConfig(config); card.hass = hass;
   return { window, card, hass, calls };
 }
-test("AdGuard registers one compact device with six controls and seven readings", () => {
+test("AdGuard registers one compact device with five protection controls and seven readings", () => {
   const { window, card, calls } = setup();
   assert.ok(window.customCards.some(c => c.type === "adguard-card"));
   assert.equal(card.getCardSize(), 1);
-  assert.equal(card.shadowRoot.querySelectorAll('input[role="switch"]').length, 6);
+  assert.equal(card.shadowRoot.querySelectorAll('input[role="switch"]').length, 5);
   assert.equal(card.shadowRoot.querySelectorAll(".metric").length, 7);
   assert.equal(card.shadowRoot.querySelector(".status").textContent, "Protected");
   assert.match(card.shadowRoot.querySelector(".summary").textContent, /35.31%.*2.84 ms/);
   assert.equal(card.shadowRoot.querySelector('[data-metric="parental_control_blocked"] .value').textContent, "0");
   assert.equal(calls.length, 0);
+});
+test("query logging is not displayed or controlled, including legacy bindings", async () => {
+  const { card, hass, calls } = setup({ query_log_entity: "switch.adguard_home_query_log" });
+  assert.equal(card.shadowRoot.querySelector('[data-control="query_log"]') === null, true);
+  assert.doesNotMatch(card.shadowRoot.textContent, /Query Log/);
+  await card.toggle("query_log", false);
+  assert.equal(calls.length, 0);
+  assert.equal(hass.states["switch.adguard_home_query_log"].state, "on");
 });
 test("opening and closing details never changes DNS settings", () => {
   const { card, calls } = setup();
@@ -80,7 +88,8 @@ test("a stalled service times out without holding DNS controls indefinitely", as
 test("editor includes bindings and emits config changes without service calls", () => {
   const { window, hass } = setup(); const editor = window.document.createElement("adguard-card-editor");
   editor.setConfig({}); editor.hass = hass;
-  const selectors = editor.shadowRoot.querySelectorAll("ha-selector"); assert.equal(selectors.length, 13);
+  const selectors = editor.shadowRoot.querySelectorAll("ha-selector"); assert.equal(selectors.length, 12);
+  assert.doesNotMatch(editor.shadowRoot.textContent, /Query Log/);
   let changed; editor.addEventListener("config-changed", e => { changed = e.detail.config; });
   selectors[0].dispatchEvent(new window.CustomEvent("value-changed", { detail: { value: "switch.custom_protection" } }));
   assert.equal(changed.protection_entity, "switch.custom_protection");

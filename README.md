@@ -356,7 +356,8 @@ The icon is embedded in the bundle; the old separately hosted SVG is no longer r
 
 One compact device tile with protection status, blocked-query percentage and DNS
 response time. Open it to manage Protection, Filtering, Safe Browsing, Safe
-Search, Parental Control and Query Log, alongside seven DNS statistics.
+Search and Parental Control, alongside seven DNS statistics. Query logging is
+an administrative setting and is not shown among the protection controls.
 Opening the card never changes a setting. Controls use the existing Home
 Assistant AdGuard switch entities; missing or unavailable controls are disabled.
 

@@ -1,6 +1,6 @@
 export const adguardControls = [
   ["protection", "Protection"], ["filtering", "Filtering"], ["safe_browsing", "Safe Browsing"],
-  ["safe_search", "Safe Search"], ["parental_control", "Parental Control"], ["query_log", "Query Log"]
+  ["safe_search", "Safe Search"], ["parental_control", "Parental Control"]
 ];
 export const adguardMetrics = [
   ["dns_queries", "DNS Queries"], ["dns_queries_blocked", "Blocked Queries"],
