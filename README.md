@@ -352,6 +352,29 @@ Remove the old `power-strip-card.js` dashboard resource when adding this library
 then refresh all clients. Do not load both resources together.
 The icon is embedded in the bundle; the old separately hosted SVG is no longer required.
 
+## AdGuard Home
+
+One compact device tile with protection status, blocked-query percentage and DNS
+response time. Open it to manage Protection, Filtering, Safe Browsing, Safe
+Search, Parental Control and Query Log, alongside seven DNS statistics.
+Opening the card never changes a setting. Controls use the existing Home
+Assistant AdGuard switch entities; missing or unavailable controls are disabled.
+
+![AdGuard Home controls](docs/images/adguard-controls.png)
+
+```yaml
+type: custom:adguard-card
+name: AdGuard Home
+entity_prefix: adguard_home
+```
+
+The prefix maps to `switch.adguard_home_protection`,
+`sensor.adguard_home_dns_queries` and the other standard AdGuard integration
+entities. The visual editor supports individual bindings. In YAML, override any
+binding with `<suffix>_entity`, for example `protection_entity: switch.my_dns` or
+`average_processing_speed_entity: sensor.my_dns_latency`. Statistics retain the
+integration's reporting period; they are not assumed to be daily counts.
+
 ## Development
 
 ```sh
