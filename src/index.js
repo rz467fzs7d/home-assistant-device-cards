@@ -11,4 +11,6 @@ import "./cards/plant-monitor-card.js";
 import "./cards/plant-monitor-editor.js";
 import "./cards/adguard-card.js";
 import "./cards/adguard-editor.js";
+import "./cards/toilet-seat-card.js";
+import "./cards/toilet-seat-editor.js";
 console.info(`Home Assistant Device Cards ${__VERSION__}`);
