@@ -13,10 +13,10 @@ The Plant Monitor screenshot below shows live Home Assistant readings.
 ### Toilet Seat
 
 `custom:toilet-seat-card` wraps a real power switch in a compact device tile
-with a monochrome seat silhouette. Open it for explicit On/Off commands and
-native entity history. Unknown stays Unknown until HA reports a state;
-explicit commands remain available for an online switch with unknown state.
-Unavailable/missing entities disable power controls. Pending requests block
+with a monochrome seat silhouette. Open its compact dialog for a single Power
+row with live state and a switch, plus native entity history at the bottom right.
+Unknown stays Unknown until HA reports a state; unknown, unavailable and missing
+entities disable the switch instead of presenting a guessed power state. Pending requests block
 duplicates, errors are visible, and requests time out after 15 seconds.
 No temperature, lid, occupancy or heating capabilities are inferred.
 

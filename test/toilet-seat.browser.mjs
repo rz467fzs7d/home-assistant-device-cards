@@ -30,16 +30,21 @@ try {
     await card.locator(".identity").click(); const dialog = card.locator("dialog");
     assert.equal(await dialog.evaluate(n => { const b = n.getBoundingClientRect(); return n.open && b.left >= 0 && b.right <= innerWidth && n.scrollWidth <= n.clientWidth; }), true);
     assert.equal(await dialog.locator(".status").innerText(), "Unknown");
-    await dialog.getByRole("button", { name: "Turn on", exact: true }).click();
+    const power = dialog.getByRole("switch", { name: "Power", exact: true });
+    assert.equal(await power.isDisabled(), true);
+    assert.equal(await dialog.evaluate(n => n.getBoundingClientRect().height < 230), true);
+    await page.evaluate(() => { hass.states["switch.seat"].state = "off"; document.querySelector("toilet-seat-card").hass = hass; });
+    await power.click();
     assert.deepEqual(await page.evaluate(() => calls), [["switch", "turn_on", { entity_id: "switch.seat" }]]);
-    assert.equal(await dialog.locator(".status").innerText(), "Unknown");
+    assert.equal(await dialog.locator(".status").innerText(), "Off");
+    assert.equal(await power.isChecked(), false);
     await page.evaluate(() => { hass.states["switch.seat"].state = "on"; document.querySelector("toilet-seat-card").hass = hass; });
     assert.equal(await dialog.locator(".status").innerText(), "On");
     if (width === 390 && !dark) await dialog.screenshot({ path: "docs/images/toilet-seat-controls.png" });
     await page.evaluate(() => { hass.states["switch.seat"].state = "unavailable"; document.querySelector("toilet-seat-card").hass = hass; });
-    assert.equal(await dialog.getByRole("button", { name: "Turn on", exact: true }).isDisabled(), true);
+    assert.equal(await power.isDisabled(), true);
     await dialog.getByRole("button", { name: "Close", exact: true }).click();
     assert.deepEqual(errors, []); await page.close();
   }
-  console.log("Toilet seat: desktop/mobile light/dark, honest states and explicit mock-only power controls passed.");
+  console.log("Toilet seat: compact dialog, desktop/mobile light/dark, honest states and mock-only switch controls passed.");
 } finally { await browser.close(); }
