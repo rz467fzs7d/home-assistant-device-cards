@@ -360,6 +360,9 @@ Search and Parental Control, alongside seven DNS statistics. Query logging is
 an administrative setting and is not shown among the protection controls.
 Opening the card never changes a setting. Controls use the existing Home
 Assistant AdGuard switch entities; missing or unavailable controls are disabled.
+Protection is the master switch, available directly on the tile and separately
+above the four settings in the details. Turning it off pauses protection without
+changing any individual setting; turning it on resumes the saved configuration.
 
 ![AdGuard Home controls](docs/images/adguard-controls.png)
 

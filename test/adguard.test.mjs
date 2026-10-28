@@ -17,12 +17,48 @@ test("AdGuard registers one compact device with five protection controls and sev
   const { window, card, calls } = setup();
   assert.ok(window.customCards.some(c => c.type === "adguard-card"));
   assert.equal(card.getCardSize(), 1);
-  assert.equal(card.shadowRoot.querySelectorAll('input[role="switch"]').length, 5);
+  assert.equal(card.shadowRoot.querySelector('dialog').querySelectorAll('input[role="switch"]').length, 5);
   assert.equal(card.shadowRoot.querySelectorAll(".metric").length, 7);
   assert.equal(card.shadowRoot.querySelector(".status").textContent, "Protected");
   assert.match(card.shadowRoot.querySelector(".summary").textContent, /35.31%.*2.84 ms/);
   assert.equal(card.shadowRoot.querySelector('[data-metric="parental_control_blocked"] .value').textContent, "0");
   assert.equal(calls.length, 0);
+});
+test("Protection is a dedicated master in the tile and above four independent settings", () => {
+  const { card } = setup();
+  assert.equal(card.shadowRoot.querySelectorAll('.tile-control [data-control="protection"]').length, 1);
+  assert.equal(card.shadowRoot.querySelectorAll('.master-controls [data-control="protection"]').length, 1);
+  assert.equal(card.shadowRoot.querySelector('.controls').querySelectorAll('[role="switch"]').length, 4);
+  assert.equal(card.shadowRoot.querySelector('.controls [data-control="protection"]') === null, true);
+});
+test("master toggles only Protection and preserves every child preference across off and on", async () => {
+  const { window, card, hass, calls } = setup();
+  const children = ["filtering", "safe_browsing", "safe_search", "parental_control"];
+  hass.states["switch.adguard_home_safe_browsing"].state = "off";
+  hass.states["switch.adguard_home_parental_control"].state = "off";
+  const preferences = children.map(key => hass.states[`switch.adguard_home_${key}`].state);
+  card.hass = hass;
+  const tile = card.shadowRoot.querySelector('.tile-control [data-control="protection"]');
+  assert.equal(Boolean(tile), true);
+  tile.checked = false;
+  tile.dispatchEvent(new window.Event("change", { bubbles: true }));
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.deepEqual(JSON.parse(JSON.stringify(calls)), [["switch", "turn_off", { entity_id: "switch.adguard_home_protection" }]]);
+  assert.equal(card.shadowRoot.querySelector("dialog").open, false);
+  assert.equal(tile.checked, true);
+  hass.states["switch.adguard_home_protection"].state = "off"; card.hass = hass;
+  assert.equal([...card.shadowRoot.querySelectorAll('[data-control="protection"]')].every(input => !input.checked), true);
+  assert.equal(card.shadowRoot.querySelector(".status").textContent, "Disabled");
+  assert.deepEqual(children.map(key => hass.states[`switch.adguard_home_${key}`].state), preferences);
+  assert.equal(card.shadowRoot.querySelector('[data-control="filtering"]').disabled, false);
+  await card.toggle("protection", true);
+  hass.states["switch.adguard_home_protection"].state = "on"; card.hass = hass;
+  assert.deepEqual(JSON.parse(JSON.stringify(calls)), [
+    ["switch", "turn_off", { entity_id: "switch.adguard_home_protection" }],
+    ["switch", "turn_on", { entity_id: "switch.adguard_home_protection" }],
+  ]);
+  assert.equal([...card.shadowRoot.querySelectorAll('[data-control="protection"]')].every(input => input.checked), true);
+  assert.deepEqual(children.map(key => hass.states[`switch.adguard_home_${key}`].state), preferences);
 });
 test("query logging is not displayed or controlled, including legacy bindings", async () => {
   const { card, hass, calls } = setup({ query_log_entity: "switch.adguard_home_query_log" });
@@ -63,7 +99,7 @@ test("busy operations cannot duplicate requests; service failures remain visible
   const { card, hass } = setup(); let reject; let count = 0;
   hass.callService = () => { count++; return new Promise((_, r) => { reject = r; }); };
   const pending = card.toggle("protection", false);
-  assert.equal(card.shadowRoot.querySelector('[data-control="protection"]').disabled, true);
+  assert.equal([...card.shadowRoot.querySelectorAll('[data-control="protection"]')].every(input => input.disabled), true);
   await card.toggle("protection", false); assert.equal(count, 1);
   reject(new Error("Not permitted")); await pending;
   assert.match(card.shadowRoot.querySelector('[role="alert"]').textContent, /Not permitted/);

@@ -39,6 +39,8 @@ try {
       assert.equal(await dialog.evaluate(n => n.open), true);
       assert.equal(await dialog.getByRole("switch").count(), 5);
       assert.equal(await dialog.getByRole("switch", { name: "Query Log", exact: true }).count(), 0);
+      assert.equal(await page.locator('adguard-card .master-controls [role="switch"]').count(), 1);
+      assert.equal(await page.locator('adguard-card .controls [role="switch"]').count(), 4);
       assert.equal(await dialog.evaluate(n => n.scrollWidth > n.clientWidth), false);
       assert.equal(await dialog.evaluate(n => { const b = n.getBoundingClientRect(); return b.left >= 0 && b.right <= innerWidth && b.bottom <= innerHeight; }), true);
       assert.equal(await page.evaluate(() => calls.length), 0);
@@ -51,9 +53,20 @@ try {
         assert.equal(await page.locator('adguard-card [data-control="safe_browsing"]').isChecked(), true);
       }
       await page.keyboard.press("Escape"); assert.equal(await dialog.evaluate(n => n.open), false);
+      if (width === 390 && !dark) {
+        const preferences = await page.evaluate(() => ["filtering", "safe_browsing", "safe_search", "parental_control"].map(k => hass.states[`switch.adguard_home_${k}`].state));
+        await page.evaluate(() => { calls.length = 0; });
+        await page.locator('adguard-card .tile-control [role="switch"]').click();
+        assert.deepEqual(await page.evaluate(() => calls), [["switch", "turn_off", { entity_id: "switch.adguard_home_protection" }]]);
+        assert.equal(await dialog.evaluate(n => n.open), false);
+        await page.evaluate(() => { hass.states["switch.adguard_home_protection"].state = "off"; document.querySelector("adguard-card").hass = hass; });
+        assert.equal(await page.locator('adguard-card .tile-control [role="switch"]').isChecked(), false);
+        assert.deepEqual(await page.evaluate(() => ["filtering", "safe_browsing", "safe_search", "parental_control"].map(k => hass.states[`switch.adguard_home_${k}`].state)), preferences);
+      }
       await page.evaluate(() => { hass.states["switch.adguard_home_protection"].state = "unavailable"; document.querySelector("adguard-card").hass = hass; });
       await page.locator("adguard-card .identity").click();
-      assert.equal(await page.locator('adguard-card [data-control="protection"]').isDisabled(), true);
+      assert.equal(await page.locator('adguard-card .master-controls [data-control="protection"]').isDisabled(), true);
+      assert.equal(await page.locator('adguard-card .tile-control [data-control="protection"]').isDisabled(), true);
       assert.deepEqual(errors, []); await page.close();
     }
   }
