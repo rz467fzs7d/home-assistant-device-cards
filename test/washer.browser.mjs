@@ -65,6 +65,14 @@ try {
     assert.equal(await page.locator("washer-card .start").isDisabled(), true);
     assert.equal(await page.locator("washer-card select").isDisabled(), true);
     assert.ok((await page.locator("washer-card .hint").textContent()).includes("Turn on the washer"));
+    await page.evaluate(() => {
+      const card = window.washer;
+      card._hass.states["sensor.washer"].state = "cool_down";
+      card.update();
+    });
+    assert.equal(await page.locator("washer-card .stop").isDisabled(), true);
+    assert.ok((await page.locator("washer-card .hint").textContent()).includes("Enable Remote Start"));
+    await page.screenshot({ path: `test-results/washer-remote-off-${width}.png` });
     await page.keyboard.press("Escape");
     assert.equal(await page.locator("washer-card dialog").evaluate(el => el.open), false);
     assert.deepEqual(errors, []);

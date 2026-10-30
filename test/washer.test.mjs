@@ -38,6 +38,25 @@ function setup(status = "sleep", remote = "on") {
 }
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
 
+test("remote off or unknown blocks Stop during cooling without sending a command", async () => {
+  for (const remote of ["off", "unknown", "unavailable"]) {
+    const { card, calls, window } = setup("cool_down", remote);
+    window.confirm = () => { throw new Error("disabled control must not confirm"); };
+    assert.equal(card.shadowRoot.querySelector(".stop").disabled, true);
+    assert.match(card.shadowRoot.querySelector(".hint").textContent, /Enable Remote Start/);
+    await card.operate(true);
+    assert.deepEqual(calls, []);
+  }
+});
+
+test("permission lost during Stop confirmation is checked again before sending", async () => {
+  const { card, calls, window, state } = setup("cool_down", "on");
+  window.confirm = () => { state("cool_down", "off"); return true; };
+  await card.operate(true);
+  assert.deepEqual(calls, []);
+  assert.match(card.shadowRoot.querySelector(".message").textContent, /Enable Remote Start/);
+});
+
 test("Start wakes first and waits for actual readiness and remote permission", async () => {
   const { card, calls, state, hass } = setup("sleep", "off");
   const original = hass.callService;

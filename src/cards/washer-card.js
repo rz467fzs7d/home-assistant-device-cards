@@ -42,7 +42,7 @@ class WasherCard extends HTMLElement {
   get startReason() {
     if (this.status === "power_off") return "Turn on the washer and enable Remote Start.";
     if (this.status === "end") return "Prepare the next load and enable Remote Start on the washer.";
-    if (this.ready && !this.remote) return "Enable Remote Start on the washer.";
+    if ((this.ready || this.canStop) && !this.remote) return "Enable Remote Start on the washer.";
     if (ASLEEP.includes(this.status) && !this.options.includes("wake_up")) return "Wake up the washer at the appliance.";
     return "";
   }
@@ -115,8 +115,8 @@ class WasherCard extends HTMLElement {
     for (const stop of [false, true]) {
       const button = root.querySelector(stop ? ".stop" : ".start");
       button.setAttribute("aria-busy", String(!!this.busy));
-      button.disabled = !!this.busy || !!this.pendingDelay || (stop ? !this.canStop : !(this.ready || ASLEEP.includes(this.status)) || !!this.startReason) || !this.options.includes(stop ? "stop" : "start");
-      button.title = !stop && this.startReason ? this.startReason : stop ? "Stop" : "Start";
+      button.disabled = !!this.busy || !!this.pendingDelay || (stop ? !this.canStop || !this.remote : !(this.ready || ASLEEP.includes(this.status)) || !!this.startReason) || !this.options.includes(stop ? "stop" : "start");
+      button.title = this.startReason || (stop ? "Stop" : "Start");
     }
     const entity = this._hass.states[this.config.delay_entity], select = root.querySelector("select");
     let values = [];
@@ -195,6 +195,7 @@ class WasherCard extends HTMLElement {
   }
   async command(option, signal) {
     if (signal.aborted) throw new DOMException("Cancelled", "AbortError");
+    if (["start", "stop"].includes(option) && !this.remote) throw new Error("Enable Remote Start on the washer.");
     if (!this.options.includes(option)) throw new Error(`Operation unavailable: ${option}`);
     await this._hass.callService("select", "select_option", { entity_id: this.config.operation_entity, option });
     if (signal.aborted) throw new DOMException("Cancelled", "AbortError");
