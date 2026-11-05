@@ -43,13 +43,22 @@ class PetkitLitterCard extends HTMLElement {
   }
   state(key) { return this._hass?.states?.[key === 'status' ? this.config.entity : this.entity(key)]?.state; }
   online() { return /^online(?:_|$)/.test(this.state('status') || ''); }
+  operation() {
+    if (!this.online()) return {};
+    const raw = this.state('state') || '';
+    const match = raw.match(/^(cleaning|dumping|leveling)(?:(_paused)(?:_.*)?)?$/);
+    if (match) return { slot: ({ cleaning: 'scoop', dumping: 'dump', leveling: 'level' })[match[1]], action: match[2] ? 'continue' : 'pause' };
+    return /^paused(?:_|$)/.test(raw) ? { action: 'continue' } : {};
+  }
   blocked(key) {
     if (this.pending || this.awaiting) return 'Waiting for the previous request';
     if (!this.online()) return 'Device is offline or unavailable';
     if (!this._hass?.callService) return 'Controls are unavailable';
     const target = this._hass.states[this.entity(key)];
     if (!target || target.state === 'unavailable') return 'This action is unavailable';
+    if (['pause', 'continue'].includes(key) && this.operation().action !== key) return 'Device state has changed';
     if (key === 'pause') return '';
+    if (key === 'continue' && /(?:^|_)paused_/.test(this.state('state') || '')) return 'Device is paused for a safety condition';
     if (this.state('occupancy') !== 'off') return 'Occupancy is detected or unknown';
     if (!['no error', 'none', '0'].includes((this.state('fault') || '').toLowerCase())) return 'Fault status is not clear';
     if (['scoop', 'dump', 'level'].includes(key) && this.state('state') !== 'idle') return 'Device is not idle';
@@ -58,11 +67,11 @@ class PetkitLitterCard extends HTMLElement {
   }
   stage(key) {
     if (!actions.some(a => a[0] === key) || this.blocked(key)) return;
-    this.selected = key; this.update();
+    this.selected = key; this.selectedState = this.state('state'); this.update();
   }
   async confirmAction() {
     const key = this.selected;
-    if (!key || this.blocked(key)) return;
+    if (!key || this.selectedState !== this.state('state') || this.blocked(key)) return;
     this.selected = null;
     await this.request('button', 'press', this.entity(key), true);
   }
@@ -97,6 +106,7 @@ class PetkitLitterCard extends HTMLElement {
   update() {
     if (!this.config || !this.shadowRoot) return;
     const root = this.shadowRoot, raw = this.state('state');
+    if (this.selected && this.selectedState !== raw) this.selected = null;
     if (this.awaiting && raw && !['unknown', 'unavailable'].includes(raw) && raw !== this.awaiting.before) {
       this.awaiting = null; clearTimeout(this.readbackTimer); this.feedback = 'Device state updated';
     }
@@ -119,10 +129,22 @@ class PetkitLitterCard extends HTMLElement {
       name.scope = 'row'; name.textContent = pet.name; value.textContent = String(pet.count ?? '\u2014'); row.append(name, value); body.append(row);
     }
     root.querySelector('.stats-warning').hidden = visits.complete;
-    for (const [key, title] of actions) {
-      const button = root.querySelector(`[data-action="${key}"]`), reason = this.blocked(key);
-      button.disabled = !!reason; button.title = reason || title;
+    const operation = this.operation();
+    for (const [slot, title] of actions.slice(0, 3)) {
+      const key = operation.slot === slot ? operation.action : slot;
+      const [, actionTitle, icon] = actions.find(a => a[0] === key);
+      const button = root.querySelector(`[data-slot="${slot}"]`), reason = this.blocked(key);
+      button.dataset.action = key; button.disabled = !!reason;
+      button.title = reason || (key === slot ? title : `${actionTitle}: ${title}`);
+      button.classList.toggle('current', key !== slot);
+      button.querySelector('ha-icon').setAttribute('icon', icon);
+      button.querySelector('.action-label').textContent = actionTitle;
+      const caption = button.querySelector('.operation-label'); caption.textContent = title; caption.hidden = key === slot;
     }
+    const overlay = root.querySelector('.context-action');
+    overlay.hidden = !operation.action || !!operation.slot;
+    overlay.disabled = !!this.blocked('continue');
+    overlay.title = this.blocked('continue') || 'Continue current operation';
     const confirmation = root.querySelector('.confirmation'); confirmation.hidden = !this.selected;
     root.querySelector('.confirm-label').textContent = this.selected ? `${actions.find(a => a[0] === this.selected)[1]}?` : '';
     root.querySelector('.confirm').disabled = !this.selected || !!this.blocked(this.selected);
@@ -139,6 +161,7 @@ class PetkitLitterCard extends HTMLElement {
       .entry{display:flex;align-items:center;gap:12px;width:100%;height:66px;min-width:0;padding:8px 12px;text-align:left;border:1px solid var(--ha-card-border-color,var(--divider-color,#ddd));border-radius:8px;background:var(--ha-card-background,var(--card-background-color,#fff))}.device-art{display:grid;place-items:center;flex:none;width:32px;height:32px;color:var(--state-icon-color,#999)}.device-art svg{width:28px;height:28px}.device-art.active{color:var(--primary-color,#03a9f4)}.info{flex:1;min-width:0}.name{display:block;font-size:14px;line-height:18px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.summary{display:block;font-size:12px;color:var(--secondary-text-color,#777);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       dialog{width:420px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow:auto;padding:20px;border:1px solid var(--divider-color,#ddd);border-radius:8px;background:var(--card-background-color,#fff);color:inherit}dialog::backdrop{background:#0006}header{display:flex;align-items:center;gap:10px}.heading{flex:1;min-width:0}.title{font-size:16px;font-weight:500;overflow-wrap:anywhere}.status{font-size:12px;color:var(--secondary-text-color,#777);margin-top:3px}.icon-button{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:50%;background:var(--secondary-background-color,#eee)}ha-icon{--mdc-icon-size:20px}
       .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:20px 0 16px;border-bottom:1px solid var(--divider-color,#ddd)}.metric{min-width:0;text-align:left;padding:0}.metric-label{display:block;font-size:11px;line-height:16px;color:var(--secondary-text-color,#777)}.metric-value{display:block;font-size:18px;line-height:26px;font-weight:500;overflow-wrap:anywhere}.weight{font-size:11px;color:var(--secondary-text-color,#777)}.pets{margin:16px 0}.section-title{font-size:13px;font-weight:500;margin:0 0 8px}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}th,td{padding:9px 0;border-bottom:1px solid var(--divider-color,#eee)}th{text-align:left;font-weight:400;overflow-wrap:anywhere}td{text-align:right;width:52px;font-variant-numeric:tabular-nums}.stats-warning,.feedback{font-size:12px;line-height:18px;color:var(--secondary-text-color,#777);overflow-wrap:anywhere;margin:10px 0}.actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:18px 0}.action{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;min-height:60px;padding:8px 2px;background:var(--secondary-background-color,#f1f3f4);border-radius:6px;font-size:11px;text-align:center;overflow-wrap:anywhere}.confirmation{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-block:1px solid var(--divider-color,#ddd);padding:12px 0;margin-bottom:12px;font-size:13px}.confirm-label{flex:1;min-width:80px}.confirm,.cancel{display:flex;align-items:center;gap:4px;padding:6px}.confirm{color:var(--error-color,#c62828)}.setting{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;font-size:13px;border-bottom:1px solid var(--divider-color,#eee)}input[role=switch]{appearance:none;position:relative;flex:none;width:36px;height:20px;border:0;border-radius:10px;background:var(--disabled-color,#aaa);cursor:pointer;margin:0}input[role=switch]:before{content:'';position:absolute;width:16px;height:16px;left:2px;top:2px;border-radius:50%;background:white}input[role=switch]:checked{background:var(--primary-color,#03a9f4)}input[role=switch]:checked:before{transform:translateX(16px)}input:disabled{opacity:.45;cursor:default}footer{display:flex;justify-content:flex-end;margin-top:14px}[hidden]{display:none!important}
+      .actions{position:relative;height:72px}.action{height:72px;gap:3px}.action.current{color:var(--primary-color,#03a9f4);box-shadow:inset 0 0 0 1px currentColor}.operation-label{font-size:10px;color:var(--secondary-text-color,#777)}.context-action{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:6px;background:var(--secondary-background-color,#f1f3f4);font-size:13px}
     </style><button class="entry" aria-haspopup="dialog"><span class="device-art">${art}</span><span class="info"><span class="name"></span><span class="summary"></span></span></button>
     <dialog><header><span class="device-art">${art}</span><div class="heading"><div class="title"></div><div class="status"></div></div><button class="icon-button close" title="Close" aria-label="Close"><ha-icon icon="mdi:close"></ha-icon></button></header>
     <div class="metrics"><button class="metric stats-history" title="Today visits history"><span class="metric-label">Today visits</span><span class="metric-value today-total"></span></button><button class="metric litter-history" title="Litter level history"><span class="metric-label">Litter</span><span class="metric-value litter-value"></span><span class="weight weight-value"></span></button><div class="metric"><span class="metric-label">Waste bin</span><span class="metric-value waste-value"></span></div></div>
@@ -154,11 +177,14 @@ class PetkitLitterCard extends HTMLElement {
     root.querySelector('.stats-history').onclick = () => this.history(this.config.stats_entity);
     root.querySelector('.litter-history').onclick = () => this.history(this.entity('litter'));
     root.querySelector('.more-info').onclick = () => this.history(this.config.entity);
-    for (const [key, title, icon] of actions) {
-      const button = document.createElement('button'); button.className = 'action'; button.dataset.action = key;
-      button.innerHTML = `<ha-icon icon="${icon}"></ha-icon><span>${title}</span>`;
-      button.onclick = () => this.stage(key); root.querySelector('.actions').append(button);
+    for (const [key, title, icon] of actions.slice(0, 3)) {
+      const button = document.createElement('button'); button.className = 'action'; button.dataset.slot = key; button.dataset.action = key;
+      button.innerHTML = `<ha-icon icon="${icon}"></ha-icon><span class="action-label">${title}</span><span class="operation-label" hidden></span>`;
+      button.onclick = () => this.stage(button.dataset.action); root.querySelector('.actions').append(button);
     }
+    const overlay = document.createElement('button'); overlay.className = 'context-action'; overlay.dataset.action = 'continue'; overlay.hidden = true;
+    overlay.innerHTML = '<ha-icon icon="mdi:play"></ha-icon><span>Continue</span>';
+    overlay.onclick = () => this.stage('continue'); root.querySelector('.actions').append(overlay);
     for (const [key, title] of settings) {
       const row = document.createElement('label'); row.className = 'setting';
       row.innerHTML = `<span>${title}</span><input type="checkbox" role="switch" aria-label="${title}" data-setting="${key}">`;

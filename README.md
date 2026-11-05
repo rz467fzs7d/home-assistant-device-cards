@@ -34,6 +34,15 @@ row. The breakdown must reconcile with the total and match today's date in
 the source timezone. Missing/stale/inconsistent data shows a dash, not zero.
 The card never requests raw diagnostics, account data or device secrets.
 
+The operation menu keeps three fixed positions: Clean, Empty litter and Level
+litter. The reported active operation changes to Pause in its own position,
+and operation-specific paused states change to Continue. A paused state without
+an operation name uses a shared Continue control over the same menu area;
+the card does not guess which operation is paused. Updates never send commands.
+Reported safety pauses keep Continue disabled until the safety condition clears.
+The integration currently reports leveling without its pause phase, so the card
+does not invent a leveling-paused state.
+
 Clean, Empty litter, Level litter, Pause and Continue require explicit
 confirmation. Starting motor actions also requires online/idle state, explicit
 unoccupied state and a clear fault sensor. Missing/unavailable actions are

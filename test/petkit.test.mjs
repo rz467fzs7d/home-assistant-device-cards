@@ -109,3 +109,59 @@ test('pending and stalled requests never retry or claim a cycle completed', asyn
   assert.doesNotMatch(card.shadowRoot.querySelector('.feedback').textContent, /completed|Request sent/);
   assert.equal(calls.length, 1);
 });
+
+test('three operation slots replace their active operation with state-driven pause or continue', () => {
+  const { card, hass, add, calls } = setup();
+  const root = card.shadowRoot;
+  assert.equal(root.querySelectorAll('.action').length, 3);
+  assert.equal(root.querySelector('[data-action="pause"]'), null);
+  add('button.box_action_pause', 'unknown'); add('button.box_action_continue', 'unknown');
+  for (const [state, slot, action] of [['cleaning', 'scoop', 'pause'], ['dumping', 'dump', 'pause'],
+    ['leveling', 'level', 'pause'], ['cleaning_paused', 'scoop', 'continue'],
+    ['dumping_paused', 'dump', 'continue']]) {
+    hass.states['sensor.box_state'].state = state; card.hass = hass;
+    const button = root.querySelector(`[data-slot="${slot}"]`);
+    assert.equal(button.dataset.action, action);
+    assert.equal(button.disabled, false);
+    assert.match(button.textContent, action === 'pause' ? /Pause/ : /Continue/);
+    assert.equal(root.querySelectorAll('.action').length, 3);
+  }
+  hass.states['sensor.box_state'].state = 'idle'; card.hass = hass;
+  assert.deepEqual([...root.querySelectorAll('.action')].map(b => b.dataset.action), ['scoop', 'dump', 'level']);
+  assert.equal(calls.length, 0);
+});
+
+test('a reported safety pause cannot be resumed even if occupancy readback still says clear', async () => {
+  const { card, hass, add, calls } = setup();
+  add('button.box_action_continue', 'unknown');
+  for (const state of ['cleaning_paused_pet_entered', 'dumping_paused_cover', 'paused_pet_approach', 'paused_system_error']) {
+    hass.states['sensor.box_state'].state = state; card.hass = hass;
+    card.stage('continue'); await card.confirmAction();
+    assert.equal(calls.length, 0);
+  }
+});
+
+test('generic paused state uses the existing operation area without guessing an operation', () => {
+  const { card, hass, add, calls } = setup();
+  add('button.box_action_continue', 'unknown');
+  hass.states['sensor.box_state'].state = 'paused_pet_approach'; card.hass = hass;
+  const overlay = card.shadowRoot.querySelector('.context-action');
+  assert.equal(overlay.hidden, false);
+  assert.equal(overlay.dataset.action, 'continue');
+  assert.equal(overlay.textContent, 'Continue');
+  assert.ok([...card.shadowRoot.querySelectorAll('.action')].every(b => b.disabled));
+  assert.equal(calls.length, 0);
+});
+
+test('state changes invalidate a staged contextual command before confirmation', async () => {
+  const { card, hass, add, calls } = setup();
+  add('button.box_action_pause', 'unknown'); add('button.box_action_continue', 'unknown');
+  hass.states['sensor.box_state'].state = 'cleaning'; card.hass = hass;
+  card.stage('pause'); assert.equal(card.selected, 'pause');
+  hass.states['sensor.box_state'].state = 'dumping'; card.hass = hass;
+  await card.confirmAction(); assert.equal(calls.length, 0); assert.equal(card.selected, null);
+  card.stage('pause'); await card.confirmAction();
+  assert.deepEqual(JSON.parse(JSON.stringify(calls)), [['button', 'press', { entity_id: 'button.box_action_pause' }]]);
+  hass.states['sensor.box_state'].state = 'idle'; card.hass = hass;
+  card.stage('continue'); await card.confirmAction(); assert.equal(calls.length, 1);
+});

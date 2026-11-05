@@ -16,7 +16,10 @@ try {
     await page.setContent(`<style>body{margin:16px;font-family:Arial;background:${dark ? '#151515' : '#fafafa'};--primary-text-color:${dark ? '#eee' : '#222'};--secondary-text-color:${dark ? '#aaa' : '#666'};--card-background-color:${dark ? '#222' : '#fff'};--divider-color:${dark ? '#444' : '#ddd'};--secondary-background-color:${dark ? '#333' : '#f0f2f3'};--primary-color:#14889a}main{max-width:440px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}</style><main></main>`);
     await page.evaluate(icons => {
       customElements.define('ha-icon', class extends HTMLElement {
-        connectedCallback() { this.attachShadow({ mode: 'open' }).innerHTML = `<style>:host{display:inline-flex;width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px)}svg{width:100%;height:100%;fill:currentColor}</style>${icons[this.getAttribute('icon')] || ''}`; }
+        static get observedAttributes() { return ['icon']; }
+        connectedCallback() { if (!this.shadowRoot) this.attachShadow({ mode: 'open' }); this.paint(); }
+        attributeChangedCallback() { if (this.shadowRoot) this.paint(); }
+        paint() { this.shadowRoot.innerHTML = `<style>:host{display:inline-flex;width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px)}svg{width:100%;height:100%;fill:currentColor}</style>${icons[this.getAttribute('icon')] || ''}`; }
       });
     }, icons);
     await page.addScriptTag({ content: await readFile('dist/home-assistant-device-cards.js', 'utf8'), type: 'module' });
@@ -42,6 +45,9 @@ try {
     assert.equal(await dialog.evaluate(n => { const r = n.getBoundingClientRect(); return n.open && r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight && n.scrollWidth <= n.clientWidth; }), true);
     assert.equal(await dialog.locator('.pet-rows').textContent(), 'First0Second1Unidentified2');
     assert.equal(await dialog.locator('.today-total').innerText(), '3');
+    assert.equal(await dialog.locator('.action').count(), 3);
+    assert.equal(await dialog.locator('.context-action').isVisible(), false);
+    const menuHeight = await dialog.locator('.actions').evaluate(n => n.getBoundingClientRect().height);
     assert.deepEqual(await page.evaluate(() => calls), []);
     await dialog.screenshot({ path: `test-results/petkit-${width}-${dark}.png` });
     if (width === 390 && !dark) await dialog.screenshot({ path: 'docs/images/petkit-litter-controls.png' });
@@ -54,8 +60,25 @@ try {
     assert.deepEqual(await page.evaluate(() => calls), [['button', 'press', { entity_id: 'button.box_scoop' }]]);
     assert.equal(await dialog.locator('.status').innerText(), 'Idle');
     assert.match(await dialog.locator('.feedback').innerText(), /Request sent/);
-    await page.evaluate(() => { hass.states['sensor.box_state'].state = 'cleaning'; card.hass = hass; });
+    await page.evaluate(() => {
+      hass.states['button.box_action_pause'].state = 'unknown'; hass.states['button.box_action_continue'].state = 'unknown';
+      hass.states['sensor.box_state'].state = 'cleaning'; card.hass = hass;
+    });
     assert.equal(await dialog.locator('.status').innerText(), 'Cleaning');
+    for (const [state, slot, action] of [['cleaning', 'scoop', 'pause'], ['cleaning_paused', 'scoop', 'continue'],
+      ['dumping', 'dump', 'pause'], ['dumping_paused', 'dump', 'continue'], ['leveling', 'level', 'pause']]) {
+      await page.evaluate(state => { hass.states['sensor.box_state'].state = state; card.hass = hass; }, state);
+      const active = dialog.locator(`[data-slot="${slot}"]`);
+      assert.equal(await active.getAttribute('data-action'), action);
+      assert.equal(await active.isDisabled(), false);
+      assert.equal(await dialog.locator('.actions').evaluate(n => n.getBoundingClientRect().height), menuHeight);
+      assert.equal(await dialog.evaluate(n => n.scrollWidth <= n.clientWidth), true);
+      if (width === 390 && !dark) await dialog.screenshot({ path: `test-results/petkit-${state}.png` });
+    }
+    await page.evaluate(() => { hass.states['sensor.box_state'].state = 'paused'; card.hass = hass; });
+    assert.equal(await dialog.locator('.context-action').isVisible(), true);
+    assert.equal(await dialog.locator('.actions').evaluate(n => n.getBoundingClientRect().height), menuHeight);
+    assert.deepEqual(await page.evaluate(() => calls), [['button', 'press', { entity_id: 'button.box_scoop' }]]);
     await page.evaluate(() => { hass.states['sensor.box_device_status'].state = 'offline'; card.hass = hass; });
     assert.equal(await dialog.getByRole('button', { name: 'Empty litter', exact: true }).isDisabled(), true);
     assert.equal(await dialog.getByRole('switch', { name: 'Automatic cleaning', exact: true }).isDisabled(), true);
