@@ -13,4 +13,6 @@ import "./cards/adguard-card.js";
 import "./cards/adguard-editor.js";
 import "./cards/toilet-seat-card.js";
 import "./cards/toilet-seat-editor.js";
+import "./cards/petkit-litter-card.js";
+import "./cards/petkit-litter-editor.js";
 console.info(`Home Assistant Device Cards ${__VERSION__}`);

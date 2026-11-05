@@ -10,6 +10,47 @@ The Plant Monitor screenshot below shows live Home Assistant readings.
 
 ## Cards
 
+### Petkit Litter Box
+
+`custom:petkit-litter-card` opens compact litter-box controls and a daily pet
+list from the same single-row tile as the other appliances. It uses the
+existing Petkit integration's real sensors, switches and action buttons.
+
+![Petkit litter box controls with synthetic pet statistics](docs/images/petkit-litter-controls.png)
+
+```yaml
+type: custom:petkit-litter-card
+name: PURA MAX 2
+entity: sensor.pura_max_2_device_status
+stats_entity: sensor.pura_max_2_today_visits
+```
+
+For daily per-pet counts, install the optional read-only
+[Petkit Litter Statistics](https://github.com/rz467fzs7d/home-assistant-petkit-stats)
+companion through HACS and select the existing litter box. It reuses Petkit's
+coordinator without another account, cloud polling or a third-party patch.
+Every pet is listed, including zero-count pets, plus a separate Unidentified
+row. The breakdown must reconcile with the total and match today's date in
+the source timezone. Missing/stale/inconsistent data shows a dash, not zero.
+The card never requests raw diagnostics, account data or device secrets.
+
+Clean, Empty litter, Level litter, Pause and Continue require explicit
+confirmation. Starting motor actions also requires online/idle state, explicit
+unoccupied state and a clear fault sensor. Missing/unavailable actions are
+disabled. HA buttons whose state is `unknown` (never pressed) remain valid
+actions when the other guards pass. These frontend checks are not physical
+safety interlocks; Petkit's own safeguards must remain enabled.
+Service acknowledgement is **Request sent**, not a claim that a cycle ran.
+Subsequent reported operating-state changes are tracked separately; errors,
+service timeouts and missing readback are explicit. No automatic retries.
+
+Automatic cleaning, Child lock and Do not disturb use actual switch readback.
+Nothing is called when opening the card. Conventional Petkit entity IDs are
+derived from the configured `*_device_status` entity; every binding can also
+be set independently in the visual editor when entity IDs have been renamed.
+Do not load another frontend implementation registering `petkit-litter-card`
+alongside this one. All browser control tests use synthetic services only.
+
 ### Toilet Seat
 
 `custom:toilet-seat-card` wraps a real power switch in a compact device tile
