@@ -62,6 +62,18 @@ try {
     assert.equal(await dialog.locator('.today-total').innerText(), '3');
     assert.equal(await dialog.locator('.action').count(), 3);
     assert.equal(await dialog.locator('.context-action').isVisible(), false);
+    const typography = await dialog.evaluate(node => {
+      const labels = [...node.querySelectorAll('.metric-label')], values = [...node.querySelectorAll('.metric-value')];
+      return { labelTops: labels.map(n => n.getBoundingClientRect().top), valueTops: values.map(n => n.getBoundingClientRect().top),
+        labelSizes: labels.map(n => getComputedStyle(n).fontSize),
+        bodySizes: ['table', '.setting', '.section-title'].map(s => getComputedStyle(node.querySelector(s)).fontSize),
+        actionSize: getComputedStyle(node.querySelector('.action')).fontSize };
+    });
+    assert.ok(Math.max(...typography.labelTops) - Math.min(...typography.labelTops) < 1, 'Metric labels must share one top alignment');
+    assert.ok(Math.max(...typography.valueTops) - Math.min(...typography.valueTops) < 1, 'Metric values must share one top alignment');
+    assert.deepEqual(typography.labelSizes, ['12px', '12px', '12px']);
+    assert.deepEqual(typography.bodySizes, ['14px', '14px', '14px']);
+    assert.equal(typography.actionSize, '12px');
     const menuHeight = await dialog.locator('.actions').evaluate(n => n.getBoundingClientRect().height);
     assert.deepEqual(await page.evaluate(() => calls), []);
     await dialog.screenshot({ path: `test-results/petkit-${width}-${dark}.png` });
