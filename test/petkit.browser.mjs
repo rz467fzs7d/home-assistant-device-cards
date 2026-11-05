@@ -35,12 +35,27 @@ try {
       for (const name of ['action_pause', 'action_continue']) add('button.box_' + name, 'unavailable');
       for (const name of ['auto_clean', 'child_lock', 'do_not_disturb']) add('switch.box_' + name, name === 'auto_clean' ? 'on' : 'off');
       window.hass = { states, callService: async (...args) => calls.push(args) };
+      const plant = document.createElement('plant-monitor-card');
+      plant.setConfig({ name: 'Plant Monitor', moisture_entity: 'sensor.box_litter_level' }); plant.hass = hass;
+      document.querySelector('main').append(plant);
       window.card = document.createElement('petkit-litter-card'); card.now = () => new Date('2026-11-05T04:00:00Z');
       card.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits', name: 'PURA MAX 2' });
       card.hass = hass; document.querySelector('main').append(card);
+      document.querySelector('main').style.gridTemplateColumns = 'minmax(0, 1fr)';
     });
     const card = page.locator('petkit-litter-card');
     assert.equal(await card.locator('.entry').evaluate(n => n.getBoundingClientRect().height), 66);
+    const dimensions = await page.evaluate(() => {
+      const snapshot = element => {
+        const root = element.shadowRoot, entry = root.querySelector('.entry'), icon = root.querySelector('.device-art'), name = root.querySelector('.name');
+        return { width: entry.getBoundingClientRect().width, height: entry.getBoundingClientRect().height,
+          color: getComputedStyle(icon).color, iconWidth: root.querySelector('.device-art svg').getBoundingClientRect().width,
+          titleSize: getComputedStyle(name).fontSize, titleHeight: getComputedStyle(name).lineHeight };
+      };
+      return [snapshot(document.querySelector('plant-monitor-card')), snapshot(card)];
+    });
+    assert.deepEqual(dimensions[0], dimensions[1]);
+    await page.screenshot({ path: `test-results/petkit-tile-${width}-${dark}.png` });
     await card.locator('.entry').click(); const dialog = card.locator('dialog');
     assert.equal(await dialog.evaluate(n => { const r = n.getBoundingClientRect(); return n.open && r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight && n.scrollWidth <= n.clientWidth; }), true);
     assert.equal(await dialog.locator('.pet-rows').textContent(), 'First0Second1Unidentified2');

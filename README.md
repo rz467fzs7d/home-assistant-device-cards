@@ -15,6 +15,8 @@ The Plant Monitor screenshot below shows live Home Assistant readings.
 `custom:petkit-litter-card` opens compact litter-box controls and a daily pet
 list from the same single-row tile as the other appliances. It uses the
 existing Petkit integration's real sensors, switches and action buttons.
+The tile defaults to a full section row (12 columns), with a bare monochrome
+outline icon and the same height, spacing and title typography as Plant Monitor.
 
 ![Petkit litter box controls with synthetic pet statistics](docs/images/petkit-litter-controls.png)
 

@@ -28,6 +28,17 @@ test('pets, zero visits and explicit unidentified visits reconcile with today to
   assert.equal(card.shadowRoot.querySelector('.today-total').textContent, '3');
   assert.equal(calls.length, 0); assert.equal(card.getGridOptions().rows, 1);
 });
+
+test('entry defaults to a full row with a bare theme-colored outline icon', () => {
+  const { card, hass } = setup();
+  assert.equal(card.getGridOptions().columns, 12);
+  const art = card.shadowRoot.querySelector('.entry .device-art');
+  assert.equal(art.classList.contains('active'), false);
+  assert.equal(art.querySelector('svg').getAttribute('fill'), 'none');
+  assert.equal(art.querySelector('svg').getAttribute('stroke'), 'currentColor');
+  hass.states['sensor.box_device_status'].state = 'offline'; card.hass = hass;
+  assert.equal(art.classList.contains('active'), false);
+});
 test('stale, incomplete or inconsistent daily statistics never become fabricated zeroes', () => {
   const { card, hass } = setup();
   for (const change of [{ date: '2026-11-04' }, { complete: false }, { unidentified: 9 }]) {
