@@ -45,8 +45,8 @@ Reported safety pauses keep Continue disabled until the safety condition clears.
 The integration currently reports leveling without its pause phase, so the card
 does not invent a leveling-paused state.
 
-Clean, Empty litter, Level litter, Pause and Continue require explicit
-confirmation. Starting motor actions also requires online/idle state, explicit
+Clean, Empty litter, Level litter, Pause and Continue send a single native
+request on click, without a second confirmation step. Starting motor actions requires online/idle state, explicit
 unoccupied state and a clear fault sensor. Missing/unavailable actions are
 disabled. HA buttons whose state is `unknown` (never pressed) remain valid
 actions when the other guards pass. These frontend checks are not physical

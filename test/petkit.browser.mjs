@@ -66,13 +66,14 @@ try {
     assert.deepEqual(await page.evaluate(() => calls), []);
     await dialog.screenshot({ path: `test-results/petkit-${width}-${dark}.png` });
     if (width === 390 && !dark) await dialog.screenshot({ path: 'docs/images/petkit-litter-controls.png' });
-    await dialog.getByRole('button', { name: 'Clean', exact: true }).click();
-    assert.deepEqual(await page.evaluate(() => calls), []);
     await page.evaluate(() => { hass.states['binary_sensor.box_toilet_occupied'].state = 'on'; card.hass = hass; });
-    assert.equal(await dialog.getByRole('button', { name: 'Confirm', exact: true }).isDisabled(), true);
+    assert.equal(await dialog.getByRole('button', { name: 'Clean', exact: true }).isDisabled(), true);
+    assert.deepEqual(await page.evaluate(() => calls), []);
     await page.evaluate(() => { hass.states['binary_sensor.box_toilet_occupied'].state = 'off'; card.hass = hass; });
-    await dialog.getByRole('button', { name: 'Confirm', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Clean', exact: true }).click();
+    assert.equal(await dialog.locator('.confirmation').count(), 0);
     assert.deepEqual(await page.evaluate(() => calls), [['button', 'press', { entity_id: 'button.box_scoop' }]]);
+    assert.equal(await dialog.getByRole('button', { name: 'Clean', exact: true }).isDisabled(), true);
     assert.equal(await dialog.locator('.status').innerText(), 'Idle');
     assert.match(await dialog.locator('.feedback').innerText(), /Request sent/);
     await page.evaluate(() => {
@@ -103,5 +104,5 @@ try {
     assert.equal(await dialog.evaluate(n => n.scrollWidth <= n.clientWidth), true);
     assert.deepEqual(errors, []); await page.close();
   }
-  console.log('Petkit: desktop/mobile, light/dark, per-pet counts, date rollover, confirmations and occupancy guards passed with mock services only.');
+  console.log('Petkit: desktop/mobile, light/dark, direct single-click controls, duplicate protection and occupancy guards passed with mock services only.');
 } finally { await browser.close(); }
