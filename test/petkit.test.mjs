@@ -223,3 +223,36 @@ test('timeline failures are visible and stale date requests do not paint the wro
   assert.equal(card.historyDate, '2026-11-04');
   assert.match(card.shadowRoot.querySelector('.timeline-status').textContent, /Calendar unavailable/);
 });
+
+test('native themeable breed icons are available and selected by real pet ID, not the displayed name', async () => {
+  const { window, card, hass, calls } = setup();
+  assert.equal(typeof window.customIcons?.hadc?.getIcon, 'function', 'Native cat icon set is not registered');
+  const tabby = await window.customIcons.hadc.getIcon('cat-tabby');
+  const calico = await window.customIcons.hadc.getIcon('cat-calico');
+  assert.equal(tabby.viewBox, '0 0 24 24'); assert.equal(calico.viewBox, '0 0 24 24');
+  assert.ok(tabby.path.length > 100 && calico.path.length > 100);
+  assert.notEqual(tabby.path, calico.path);
+  card.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits',
+    pet_icons: { '1': 'hadc:cat-tabby', '2': 'hadc:cat-calico' } });
+  card.hass = hass;
+  const icons = [...card.shadowRoot.querySelectorAll('.pet-rows ha-icon')].map(n => n.getAttribute('icon'));
+  assert.deepEqual(icons, ['hadc:cat-tabby', 'hadc:cat-calico', 'mdi:help-circle-outline']);
+  assert.equal(card.shadowRoot.querySelectorAll('.pet-rows img').length, 0);
+  assert.equal(calls.length, 0);
+  assert.throws(() => card.setConfig({ entity: 'sensor.box_device_status', pet_icons: { '1': '<svg>' } }), /pet_icons/);
+});
+
+test('visual editor changes one pet icon without changing names or device bindings', () => {
+  const { window, hass, calls } = setup();
+  const editor = window.document.createElement('petkit-litter-card-editor');
+  editor.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits', pet_icons: { '1': 'hadc:cat-tabby' } });
+  editor.hass = hass;
+  const picker = editor.shadowRoot.querySelector('[data-pet-id="2"]');
+  assert.ok(picker, 'Per-pet native icon picker is not implemented');
+  let changed;
+  editor.addEventListener('config-changed', event => { changed = event.detail.config; });
+  picker.dispatchEvent(new window.CustomEvent('value-changed', { detail: { value: 'hadc:cat-calico' } }));
+  assert.deepEqual(JSON.parse(JSON.stringify(changed.pet_icons)), { '1': 'hadc:cat-tabby', '2': 'hadc:cat-calico' });
+  assert.equal(changed.entity, 'sensor.box_device_status');
+  assert.equal(calls.length, 0);
+});

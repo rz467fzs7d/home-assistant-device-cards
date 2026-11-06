@@ -1,3 +1,4 @@
+import "./pet-icons.js";
 import "./cards/power-strip-card.js";
 import "./cards/power-strip-editor.js";
 import "./cards/speaker-card.js";

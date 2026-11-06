@@ -26,6 +26,8 @@ class PetkitLitterCard extends HTMLElement {
       const domain = key === 'calendar_entity' ? 'calendar' : key === 'stats_entity' ? 'sensor' : bindings[key.slice(0, -7)]?.[0];
       if (!domain || typeof value !== 'string' || !new RegExp(`^${domain}\\.[a-z0-9_]+$`).test(value)) throw new Error(`Invalid ${key} binding.`);
     }
+    if (config.pet_icons !== undefined && (!config.pet_icons || typeof config.pet_icons !== 'object' || Array.isArray(config.pet_icons)
+      || Object.values(config.pet_icons).some(icon => typeof icon !== 'string' || !/^[a-z][a-z0-9-]*:[a-z0-9_-]+$/.test(icon)))) throw new Error('Invalid pet_icons mapping.');
     this.config = { ...config }; this.pending = false; this.awaiting = null; this.feedback = '';
     this.generation = (this.generation || 0) + 1;
     this.historyCache = new Map(); this.historyDate = null; this.view = 'overview';
@@ -104,6 +106,7 @@ class PetkitLitterCard extends HTMLElement {
   }
   zone() { return this._hass?.states?.[this.config.stats_entity]?.attributes?.time_zone || this._hass?.config?.time_zone || 'UTC'; }
   today() { return dateInZone(this.now?.() || new Date(), this.zone()); }
+  petIcon(id) { return id && id !== 'unidentified' ? this.config.pet_icons?.[id] || 'mdi:cat' : 'mdi:help-circle-outline'; }
   async loadHistory(day, force = false) {
     if (!this.config.calendar_entity) return;
     try { shiftDate(day, 0); if (day > this.today()) return; } catch { return; }
@@ -144,7 +147,8 @@ class PetkitLitterCard extends HTMLElement {
     const list = root.querySelector('.timeline'); list.replaceChildren();
     for (const item of entry?.rows || []) {
       const row = document.createElement('li'); row.className = 'timeline-row';
-      const icon = document.createElement('ha-icon'); icon.setAttribute('icon', item.kind === 'visit' ? 'mdi:cat' : 'mdi:broom');
+      const icon = document.createElement('ha-icon'); icon.setAttribute('icon', item.kind === 'visit' ? this.petIcon(item.pet_id) : 'mdi:broom');
+      icon.setAttribute('aria-hidden', 'true');
       const content = document.createElement('div'); content.className = 'event-content';
       const title = document.createElement('div'); title.className = 'event-title';
       title.textContent = item.kind === 'visit' ? item.pet_name : label(item.result || item.kind);
@@ -204,7 +208,11 @@ class PetkitLitterCard extends HTMLElement {
     const body = root.querySelector('.pet-rows'); body.replaceChildren();
     for (const pet of rows) {
       const row = document.createElement('tr'), name = document.createElement('th'), value = document.createElement('td');
-      name.scope = 'row'; name.textContent = pet.name; value.textContent = String(pet.count ?? '\u2014'); row.append(name, value); body.append(row);
+      name.scope = 'row';
+      const label = document.createElement('span'); label.className = 'pet-label';
+      const icon = document.createElement('ha-icon'); icon.setAttribute('icon', this.petIcon(pet.id)); icon.setAttribute('aria-hidden', 'true');
+      const text = document.createElement('span'); text.textContent = pet.name; label.append(icon, text); name.append(label);
+      value.textContent = String(pet.count ?? '\u2014'); row.append(name, value); body.append(row);
     }
     root.querySelector('.stats-warning').hidden = visits.complete;
     const operation = this.operation();
@@ -242,6 +250,7 @@ class PetkitLitterCard extends HTMLElement {
       .metric-value{display:block;font-size:20px;line-height:28px;font-weight:500;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.waste-value{font-size:16px}
       .weight{font-size:12px;line-height:18px;color:var(--secondary-text-color,#777)}.pets{margin:16px 0}.section-title{font-size:14px;line-height:20px;font-weight:500;margin:0 0 8px}
       table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px;line-height:20px}th,td{padding:10px 0;border-bottom:1px solid var(--divider-color,#eee)}th{text-align:left;font-weight:400;overflow-wrap:anywhere}td{text-align:right;width:52px;font-variant-numeric:tabular-nums}
+      .pet-label{display:flex;align-items:center;gap:10px;min-width:0}.pet-label ha-icon{flex:none;color:var(--secondary-text-color,#777)}.pet-label>span{min-width:0;overflow-wrap:anywhere}
       .stats-warning,.feedback{font-size:12px;line-height:18px;color:var(--secondary-text-color,#777);overflow-wrap:anywhere;margin:10px 0}
       .actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:18px 0;position:relative;height:72px}
       .action{display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;height:72px;padding:8px 2px;background:var(--secondary-background-color,#f1f3f4);border-radius:6px;font-size:12px;line-height:16px;text-align:center;overflow-wrap:anywhere}

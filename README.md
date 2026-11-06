@@ -26,6 +26,9 @@ name: PURA MAX 2
 entity: sensor.pura_max_2_device_status
 stats_entity: sensor.pura_max_2_today_visits
 calendar_entity: calendar.petkit_history
+pet_icons:
+  "PET_ID_1": hadc:cat-tabby
+  "PET_ID_2": hadc:cat-calico
 ```
 
 For daily per-pet counts, install the optional read-only
@@ -54,6 +57,14 @@ or corrected pet counts. This avoids double correction after a cloud-side manual
 reassignment. Partial archives do not fabricate or silently change source totals.
 Calendar lookup errors are visible, and changing dates cannot display an older
 request's response under the new date. Without `calendar_entity`, behavior is unchanged.
+
+Two original 24x24 monochrome cat icons are registered through HA's native custom
+icon API: `hadc:cat-tabby` (forehead and cheek stripes) and `hadc:cat-calico`
+(asymmetric face patch). They inherit the theme color and use no image downloads,
+background discs, extra integration or external icon plugin. The optional
+`pet_icons` mapping binds each icon to a real pet ID, shared by the pet table and
+visit timeline. Unidentified visits retain a neutral question-mark icon. Icons
+can be selected per pet in the visual editor's Pet icons section.
 
 The operation menu keeps three fixed positions: Clean, Empty litter and Level
 litter. The reported active operation changes to Pause in its own position,

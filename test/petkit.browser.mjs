@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 
 const icons = {};
-for (const name of ['broom', 'trash-can-outline', 'format-horizontal-align-center', 'pause', 'play', 'close', 'check', 'information-outline', 'cat', 'chevron-left', 'chevron-right']) {
+for (const name of ['broom', 'trash-can-outline', 'format-horizontal-align-center', 'pause', 'play', 'close', 'check', 'information-outline', 'cat', 'help-circle-outline', 'chevron-left', 'chevron-right']) {
   const response = await fetch(`https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/${name}.svg`);
   assert.ok(response.ok); icons[`mdi:${name}`] = await response.text();
 }
@@ -19,7 +19,16 @@ try {
         static get observedAttributes() { return ['icon']; }
         connectedCallback() { if (!this.shadowRoot) this.attachShadow({ mode: 'open' }); this.paint(); }
         attributeChangedCallback() { if (this.shadowRoot) this.paint(); }
-        paint() { this.shadowRoot.innerHTML = `<style>:host{display:inline-flex;width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px)}svg{width:100%;height:100%;fill:currentColor}</style>${icons[this.getAttribute('icon')] || ''}`; }
+        async paint() {
+          const name = this.getAttribute('icon');
+          let svg = icons[name] || '';
+          if (name?.startsWith('hadc:')) {
+            const icon = await window.customIcons.hadc.getIcon(name.split(':')[1]);
+            svg = `<svg viewBox="${icon.viewBox}"><path d="${icon.path}"/></svg>`;
+          }
+          if (this.getAttribute('icon') !== name) return;
+          this.shadowRoot.innerHTML = `<style>:host{display:inline-flex;width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px)}svg{width:100%;height:100%;fill:currentColor}</style>${svg}`;
+        }
       });
     }, icons);
     await page.addScriptTag({ content: await readFile('dist/home-assistant-device-cards.js', 'utf8'), type: 'module' });
@@ -39,7 +48,8 @@ try {
       plant.setConfig({ name: 'Plant Monitor', moisture_entity: 'sensor.box_litter_level' }); plant.hass = hass;
       document.querySelector('main').append(plant);
       window.card = document.createElement('petkit-litter-card'); card.now = () => new Date('2026-11-05T04:00:00Z');
-      card.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits', name: 'PURA MAX 2' });
+      card.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits', name: 'PURA MAX 2',
+        pet_icons: { '1': 'hadc:cat-tabby', '2': 'hadc:cat-calico' } });
       card.hass = hass; document.querySelector('main').append(card);
       document.querySelector('main').style.gridTemplateColumns = 'minmax(0, 1fr)';
     });
@@ -59,6 +69,8 @@ try {
     await card.locator('.entry').click(); const dialog = card.locator('dialog');
     assert.equal(await dialog.evaluate(n => { const r = n.getBoundingClientRect(); return n.open && r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight && n.scrollWidth <= n.clientWidth; }), true);
     assert.equal(await dialog.locator('.pet-rows').textContent(), 'First0Second1Unidentified2');
+    assert.deepEqual(await dialog.locator('.pet-rows ha-icon').evaluateAll(nodes => nodes.map(n => n.getAttribute('icon'))),
+      ['hadc:cat-tabby', 'hadc:cat-calico', 'mdi:help-circle-outline']);
     assert.equal(await dialog.locator('.today-total').innerText(), '3');
     assert.equal(await dialog.locator('.action').count(), 3);
     assert.equal(await dialog.locator('.context-action').isVisible(), false);
@@ -128,7 +140,8 @@ try {
         return path.includes('2026-11-04T16') ? rows.map(row => ({ description: JSON.stringify({ v: 1, ...row }) })) : [];
       };
       card.now = () => new Date('2026-11-05T04:00:00Z');
-      card.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits', calendar_entity: 'calendar.petkit_history', name: 'PURA MAX 2' });
+      card.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits', calendar_entity: 'calendar.petkit_history', name: 'PURA MAX 2',
+        pet_icons: { '1': 'hadc:cat-tabby', '2': 'hadc:cat-calico' } });
       card.hass = hass;
     });
     await card.locator('.entry').click();
@@ -137,6 +150,7 @@ try {
     assert.equal(await card.locator('.timeline-row').count(), 5);
     assert.match(await card.locator('.timeline').innerText(), /Auto-corrected/);
     assert.match(await card.locator('.timeline').innerText(), /7.5 kg/);
+    assert.equal(await card.locator('.timeline-row').nth(1).locator('ha-icon').getAttribute('icon'), 'hadc:cat-tabby');
     assert.equal(await dialog.evaluate(n => { const r = n.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight && n.scrollWidth <= n.clientWidth; }), true);
     assert.equal(await card.locator('.history-date').inputValue(), '2026-11-05');
     await dialog.screenshot({ path: `test-results/petkit-history-${width}-${dark}.png` });
