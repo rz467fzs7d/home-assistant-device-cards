@@ -59,7 +59,7 @@ Calendar lookup errors are visible, and changing dates cannot display an older
 request's response under the new date. Without `calendar_entity`, behavior is unchanged.
 
 Two original 24x24 monochrome cat icons are registered through HA's native custom
-icon API: `hadc:cat-tabby` (forehead and cheek stripes) and `hadc:cat-calico`
+icon API: `hadc:cat-tabby` (bold M-shaped forehead and cheek stripes) and `hadc:cat-calico`
 (asymmetric face patch). They inherit the theme color and use no image downloads,
 background discs, extra integration or external icon plugin. The optional
 `pet_icons` mapping binds each icon to a real pet ID, shared by the pet table and
