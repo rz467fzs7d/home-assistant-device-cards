@@ -46,6 +46,21 @@ class PetkitLitterEditor extends HTMLElement {
         section.append(node);
       }
       this.shadowRoot.append(section);
+      const weights = document.createElement('details'); weights.innerHTML = '<summary>Pet weights</summary>';
+      for (const pet of this.pets()) for (const [key, label] of [
+        ['pet_weight_entities', 'Valid weight'], ['pet_raw_weight_entities', 'Raw measurement'], ['pet_weight_time_entities', 'Measurement time']]) {
+        const node = document.createElement('ha-selector'); node.hass = this._hass; node.selector = { entity: { domain: ['sensor'] } };
+        node.label = `${pet.name} - ${label}`; node.value = this.config[key]?.[pet.id];
+        node.dataset.weightPetId = pet.id; node.dataset.weightBinding = key;
+        node.addEventListener('value-changed', event => {
+          event.stopPropagation();
+          const mapping = { ...this.config[key] };
+          if (event.detail.value) mapping[pet.id] = event.detail.value; else delete mapping[pet.id];
+          this.change(key, Object.keys(mapping).length ? mapping : undefined);
+        });
+        weights.append(node);
+      }
+      this.shadowRoot.append(weights);
     }
   }
 }

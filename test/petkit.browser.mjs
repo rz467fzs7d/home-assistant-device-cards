@@ -157,6 +157,35 @@ try {
     await card.getByRole('button', { name: 'Previous day', exact: true }).click();
     await card.getByText('No records', { exact: true }).waitFor();
     assert.equal(await card.locator('.history-date').inputValue(), '2026-11-04');
+    await page.evaluate(() => {
+      customElements.define('hui-statistics-graph-card', class extends HTMLElement {
+        setConfig(config) { this.config = config; this.textContent = 'Native chart fixture'; this.style.height = '240px'; }
+      });
+      window.loadCardHelpers = async () => ({ createCardElement(config) {
+        const chart = document.createElement('hui-statistics-graph-card'); chart.setConfig(config); return chart;
+      } });
+      hass.states['sensor.valid_one'] = { state: '4.66' }; hass.states['sensor.raw_one'] = { state: '4.66' };
+      hass.states['sensor.valid_two'] = { state: 'unknown' }; hass.states['sensor.raw_two'] = { state: '7.5' };
+      hass.states['sensor.time_one'] = { state: '2026-11-05 09:39:12' };
+      hass.states['sensor.time_two'] = { state: '2026-11-05 10:12:52' };
+      card.setConfig({ ...card.config, pet_weight_entities: { '1': 'sensor.valid_one', '2': 'sensor.valid_two' },
+        pet_raw_weight_entities: { '1': 'sensor.raw_one', '2': 'sensor.raw_two' },
+        pet_weight_time_entities: { '1': 'sensor.time_one', '2': 'sensor.time_two' } }); card.hass = hass;
+    });
+    await card.locator('.entry').click(); await card.getByRole('tab', { name: 'Weight', exact: true }).click();
+    await card.locator('hui-statistics-graph-card').waitFor();
+    assert.match(await card.locator('.weight-pets').innerText(), /4.66 kg/);
+    assert.match(await card.locator('.weight-pets').innerText(), /Needs review.*7.5 kg/);
+    for (const range of ['7', '30', '90']) {
+      await card.locator(`[data-days="${range}"]`).click();
+      assert.equal(await card.locator('hui-statistics-graph-card').evaluate(n => n.config.days_to_show), Number(range));
+    }
+    assert.equal(await dialog.evaluate(n => { const r = n.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && n.scrollWidth <= n.clientWidth; }), true);
+    const rowOverflow = await card.locator('.weight-pet').evaluateAll(rows => rows.some(row => [...row.children].some(child => {
+      const r = child.getBoundingClientRect(), p = row.getBoundingClientRect(); return r.left < p.left - 1 || r.right > p.right + 1;
+    })));
+    assert.equal(rowOverflow, false);
+    await dialog.screenshot({ path: `test-results/petkit-weight-${width}-${dark}.png` });
     assert.deepEqual(await page.evaluate(() => calls), [['button', 'press', { entity_id: 'button.box_scoop' }]]);
     assert.deepEqual(errors, []); await page.close();
   }

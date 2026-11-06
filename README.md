@@ -66,6 +66,32 @@ background discs, extra integration or external icon plugin. The optional
 visit timeline. Unidentified visits retain a neutral question-mark icon. Icons
 can be selected per pet in the visual editor's Pet icons section.
 
+The optional Weight view uses HA's native statistics graph and existing valid
+weight sensors, with 7/30/90-day ranges. Bind sensors by pet ID in the editor's
+Pet weights section, or configure these maps:
+
+```yaml
+pet_weight_entities:
+  "PET_ID_1": sensor.first_pet_valid_weight
+  "PET_ID_2": sensor.second_pet_valid_weight
+pet_raw_weight_entities:
+  "PET_ID_1": sensor.first_pet_last_weight_measurement
+  "PET_ID_2": sensor.second_pet_last_weight_measurement
+pet_weight_time_entities:
+  "PET_ID_1": sensor.first_pet_last_use_date
+  "PET_ID_2": sensor.second_pet_last_use_date
+```
+
+Use native Template sensors with `device_class: weight`, `state_class: measurement`
+and `unit_of_measurement: kg`. Return only actual valid measurements; combined or
+out-of-band readings should return `none`, never a guessed baseline. Raw sensors
+remain intact. The latest row uses Petkit's actual local measurement timestamp,
+not HA's helper creation/update time. Excluded numeric readings show Needs review.
+Hourly/daily graph means are HA statistics of the latest valid sensor state, not
+per-visit averages. Filtered statistics begin when the helpers are created; the
+card does not fabricate past measurements or alter Recorder retention. Individual
+raw observations remain available in History. Reading graphs sends no commands.
+
 The operation menu keeps three fixed positions: Clean, Empty litter and Level
 litter. The reported active operation changes to Pause in its own position,
 and operation-specific paused states change to Continue. A paused state without

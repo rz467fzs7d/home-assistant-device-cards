@@ -256,3 +256,79 @@ test('visual editor changes one pet icon without changing names or device bindin
   assert.equal(changed.entity, 'sensor.box_device_status');
   assert.equal(calls.length, 0);
 });
+
+test('weight tab uses valid native statistics with 7/30/90 day ranges and actual measurement times', async () => {
+  const { window, card, hass, add, calls } = setup();
+  const configs = [];
+  window.customElements.define('hui-statistics-graph-card', class extends window.HTMLElement {
+    setConfig(config) { this.config = config; configs.push(config); }
+  });
+  window.loadCardHelpers = async () => ({ createCardElement: config => {
+    const element = window.document.createElement('hui-statistics-graph-card'); element.setConfig(config); return element;
+  } });
+  add('sensor.valid', '4.66', { unit_of_measurement: 'kg' });
+  add('sensor.raw', '4.66'); add('sensor.measured', '2026-11-05 09:39:12');
+  hass.states['sensor.valid'].last_changed = '2026-11-05T04:00:00Z';
+  card.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits',
+    pet_weight_entities: { '1': 'sensor.valid' }, pet_raw_weight_entities: { '1': 'sensor.raw' },
+    pet_weight_time_entities: { '1': 'sensor.measured' } }); card.hass = hass;
+  card.shadowRoot.querySelector('.entry').click();
+  card.setView('weight'); await new Promise(resolve => setTimeout(resolve, 0));
+  const root = card.shadowRoot;
+  assert.equal(root.querySelector('.overview').hidden, true);
+  assert.equal(root.querySelector('.weight-view').hidden, false);
+  assert.match(root.querySelector('.weight-pets').textContent, /4.66 kg/);
+  assert.match(root.querySelector('.weight-pets').textContent, /2026-11-05.*09:39/);
+  assert.doesNotMatch(root.querySelector('.weight-pets').textContent, /12:00/);
+  assert.equal(configs.at(-1).days_to_show, 7);
+  assert.equal(configs.at(-1).entities[0].entity, 'sensor.valid');
+  root.querySelector('[data-days="30"]').click(); await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(configs.at(-1).days_to_show, 30);
+  root.querySelector('[data-days="90"]').click(); await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(configs.at(-1).days_to_show, 90);
+  assert.equal(configs.at(-1).period, 'day');
+  assert.equal(calls.length, 0);
+});
+
+test('weight views never show combined values or unknown as zero and graph errors stay visible', async () => {
+  const { window, card, hass, add } = setup();
+  add('sensor.valid', 'unknown'); add('sensor.raw', '7.5'); add('sensor.measured', 'Unknown');
+  card.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits',
+    pet_weight_entities: { '1': 'sensor.valid' }, pet_raw_weight_entities: { '1': 'sensor.raw' },
+    pet_weight_time_entities: { '1': 'sensor.measured' } }); card.hass = hass;
+  card.shadowRoot.querySelector('.entry').click();
+  card.setView('weight'); await new Promise(resolve => setTimeout(resolve, 0));
+  assert.match(card.shadowRoot.querySelector('.weight-pets').textContent, /Needs review.*7.5 kg/);
+  assert.doesNotMatch(card.shadowRoot.querySelector('.weight-pets').textContent, /0 kg/);
+  assert.match(card.shadowRoot.querySelector('.weight-status').textContent, /unavailable/i);
+  assert.throws(() => card.setConfig({ entity: 'sensor.box_device_status', pet_weight_entities: { '1': 'switch.invalid' } }), /pet_weight_entities/);
+  window.loadCardHelpers = async () => { throw new Error('Chart failed'); };
+  card.setView('weight'); await new Promise(resolve => setTimeout(resolve, 0));
+  assert.match(card.shadowRoot.querySelector('.weight-status').textContent, /Chart failed/);
+});
+
+test('a stale chart loader cannot paint after changing range, closing or replacing configuration', async () => {
+  const { window, card, hass, calls } = setup();
+  let finish; const loads = [];
+  window.loadCardHelpers = () => new Promise(resolve => { finish = resolve; });
+  card.setConfig({ entity: 'sensor.box_device_status', pet_weight_entities: { '1': 'sensor.valid' } }); card.hass = hass;
+  card.shadowRoot.querySelector('.entry').click(); card.setView('weight');
+  card.setView('overview');
+  finish({ createCardElement: config => { loads.push(config); return window.document.createElement('div'); } });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(loads.length, 0);
+  assert.equal(card.shadowRoot.querySelector('.weight-chart').childElementCount, 0);
+  assert.equal(calls.length, 0);
+});
+
+test('weight editor maps sensors per pet without disturbing other bindings', () => {
+  const { window, hass } = setup();
+  const editor = window.document.createElement('petkit-litter-card-editor');
+  editor.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits',
+    pet_weight_entities: { '1': 'sensor.valid_one' } }); editor.hass = hass;
+  const picker = editor.shadowRoot.querySelector('[data-weight-pet-id="2"][data-weight-binding="pet_weight_entities"]');
+  let changed; editor.addEventListener('config-changed', event => { changed = event.detail.config; });
+  picker.dispatchEvent(new window.CustomEvent('value-changed', { detail: { value: 'sensor.valid_two' } }));
+  assert.deepEqual(JSON.parse(JSON.stringify(changed.pet_weight_entities)), { '1': 'sensor.valid_one', '2': 'sensor.valid_two' });
+  assert.equal(changed.entity, 'sensor.box_device_status');
+});
