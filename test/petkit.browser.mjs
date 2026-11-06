@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 
 const icons = {};
-for (const name of ['broom', 'trash-can-outline', 'format-horizontal-align-center', 'pause', 'play', 'close', 'check', 'information-outline']) {
+for (const name of ['broom', 'trash-can-outline', 'format-horizontal-align-center', 'pause', 'play', 'close', 'check', 'information-outline', 'cat', 'chevron-left', 'chevron-right']) {
   const response = await fetch(`https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/${name}.svg`);
   assert.ok(response.ok); icons[`mdi:${name}`] = await response.text();
 }
@@ -114,6 +114,36 @@ try {
     assert.equal(await dialog.locator('.today-total').innerText(), '\u2014');
     await page.evaluate(() => { hass.states['sensor.visits'].attributes.pets[0].name = 'A-very-long-pet-name-that-must-not-overflow-the-dialog'; card.hass = hass; });
     assert.equal(await dialog.evaluate(n => n.scrollWidth <= n.clientWidth), true);
+    await page.evaluate(() => {
+      const ts = Date.parse('2026-11-05T04:00:00Z') / 1000;
+      const rows = [
+        { id: 'visit:1', kind: 'visit', ts, pet_id: '1', pet_name: '\u5f39\u5f13', raw_pet_id: '2', raw_weight_kg: 7.5, weight_kg: null, duration_seconds: 70, correction: 'combined_weight' },
+        { id: 'visit:2', kind: 'visit', ts: ts - 2000, pet_id: null, raw_pet_id: null, raw_weight_kg: 4.75, weight_kg: null },
+        { id: 'visit:3', kind: 'visit', ts: ts - 4000, pet_id: null, raw_pet_id: null, raw_weight_kg: 2.68, weight_kg: null },
+        { id: 'cleaning:1', kind: 'cleaning', ts: ts + 400, result: 'auto_cleaning_completed' },
+        { id: 'cleaning:2', kind: 'cleaning', ts: ts - 1600, result: 'manual_cleaning_completed' },
+      ];
+      hass.callApi = async (method, path) => {
+        if (method !== 'GET' || !path.startsWith('calendars/calendar.petkit_history?')) throw new Error('Unexpected calendar request');
+        return path.includes('2026-11-04T16') ? rows.map(row => ({ description: JSON.stringify({ v: 1, ...row }) })) : [];
+      };
+      card.now = () => new Date('2026-11-05T04:00:00Z');
+      card.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits', calendar_entity: 'calendar.petkit_history', name: 'PURA MAX 2' });
+      card.hass = hass;
+    });
+    await card.locator('.entry').click();
+    await card.getByRole('tab', { name: 'History', exact: true }).click();
+    await card.locator('.timeline-row').first().waitFor();
+    assert.equal(await card.locator('.timeline-row').count(), 5);
+    assert.match(await card.locator('.timeline').innerText(), /Auto-corrected/);
+    assert.match(await card.locator('.timeline').innerText(), /7.5 kg/);
+    assert.equal(await dialog.evaluate(n => { const r = n.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight && n.scrollWidth <= n.clientWidth; }), true);
+    assert.equal(await card.locator('.history-date').inputValue(), '2026-11-05');
+    await dialog.screenshot({ path: `test-results/petkit-history-${width}-${dark}.png` });
+    await card.getByRole('button', { name: 'Previous day', exact: true }).click();
+    await card.getByText('No records', { exact: true }).waitFor();
+    assert.equal(await card.locator('.history-date').inputValue(), '2026-11-04');
+    assert.deepEqual(await page.evaluate(() => calls), [['button', 'press', { entity_id: 'button.box_scoop' }]]);
     assert.deepEqual(errors, []); await page.close();
   }
   console.log('Petkit: desktop/mobile, light/dark, direct single-click controls, duplicate protection and occupancy guards passed with mock services only.');

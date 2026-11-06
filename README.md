@@ -25,6 +25,7 @@ type: custom:petkit-litter-card
 name: PURA MAX 2
 entity: sensor.pura_max_2_device_status
 stats_entity: sensor.pura_max_2_today_visits
+calendar_entity: calendar.petkit_history
 ```
 
 For daily per-pet counts, install the optional read-only
@@ -35,6 +36,24 @@ Every pet is listed, including zero-count pets, plus a separate Unidentified
 row. The breakdown must reconcile with the total and match today's date in
 the source timezone. Missing/stale/inconsistent data shows a dash, not zero.
 The card never requests raw diagnostics, account data or device secrets.
+
+The optional `calendar_entity` enables a date-selectable History view. It reads
+standard Home Assistant calendar events; it never calls a Petkit cloud API.
+Native HA automations can archive observations to a Local Calendar, independently
+of Recorder retention, without changing the Petkit integration. Event descriptions
+use a versioned allowlisted JSON record: `v: 1`, stable `id`, Unix `ts`, `kind`
+(`visit`, `cleaning`, `emptying`, `leveling`), `raw_pet_id`, effective `pet_id`,
+`pet_name`, `raw_weight_kg`, valid `weight_kg`, `duration_seconds`, `correction`,
+`result`, and numeric `observed_at`. Revisions with the same ID are deduplicated.
+Malformed entries and entries outside the selected source-timezone date are ignored.
+
+An observation marked `correction: combined_weight` retains its measured combined
+weight but excludes it from daily weight ranges. The per-pet overview is recomputed
+only when all today's visits are present and reconcile with either the source's raw
+or corrected pet counts. This avoids double correction after a cloud-side manual
+reassignment. Partial archives do not fabricate or silently change source totals.
+Calendar lookup errors are visible, and changing dates cannot display an older
+request's response under the new date. Without `calendar_entity`, behavior is unchanged.
 
 The operation menu keeps three fixed positions: Clean, Empty litter and Level
 litter. The reported active operation changes to Pause in its own position,
@@ -56,7 +75,7 @@ Subsequent reported operating-state changes are tracked separately; errors,
 service timeouts and missing readback are explicit. No automatic retries.
 
 Automatic cleaning, Child lock and Do not disturb use actual switch readback.
-Nothing is called when opening the card. Conventional Petkit entity IDs are
+Opening the card never sends device commands; an optional calendar is read-only. Conventional Petkit entity IDs are
 derived from the configured `*_device_status` entity; every binding can also
 be set independently in the visual editor when entity IDs have been renamed.
 Do not load another frontend implementation registering `petkit-litter-card`

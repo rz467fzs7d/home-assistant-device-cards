@@ -1,5 +1,6 @@
 const fields = [
   ['entity', 'Device status', 'sensor'], ['stats_entity', 'Today visits statistics', 'sensor'],
+  ['calendar_entity', 'History calendar', 'calendar'],
   ['state_entity', 'Operating state', 'sensor'], ['occupancy_entity', 'Occupancy', 'binary_sensor'], ['fault_entity', 'Fault', 'sensor'],
   ['litter_entity', 'Litter level', 'sensor'], ['weight_entity', 'Litter weight', 'sensor'], ['waste_entity', 'Waste bin full', 'binary_sensor'],
   ['scoop_entity', 'Clean', 'button'], ['dump_entity', 'Empty litter', 'button'], ['level_entity', 'Level litter', 'button'],

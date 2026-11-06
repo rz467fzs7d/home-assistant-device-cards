@@ -186,3 +186,40 @@ test('each action targets its native button directly without a second step', asy
     assert.equal(hass.states['sensor.box_state'].state, state);
   }
 });
+
+test('timeline reads only the native calendar, preserves raw weight and adjusts complete daily counts', async () => {
+  const { card, hass, calls } = setup();
+  card.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits', calendar_entity: 'calendar.petkit_history' });
+  const ts = Date.parse('2026-11-05T04:00:00Z') / 1000;
+  const records = [{ id: 'a', raw_pet_id: '2', pet_id: '1', pet_name: '<img src=x>', raw_weight_kg: 7.5,
+    weight_kg: null, correction: 'combined_weight' }, { id: 'b', raw_pet_id: null, pet_id: null }, { id: 'c', raw_pet_id: null, pet_id: null }];
+  const reads = [];
+  hass.callApi = async (method, path) => {
+    reads.push([method, path]);
+    return records.map((r, i) => ({ description: JSON.stringify({ v: 1, ts: ts + i, kind: 'visit', ...r }) }));
+  };
+  card.hass = hass;
+  card.shadowRoot.querySelector('.entry').click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  card.shadowRoot.querySelector('[data-view="history"]').click();
+  assert.match(card.shadowRoot.querySelector('.timeline').textContent, /7.5 kg/);
+  assert.match(card.shadowRoot.querySelector('.timeline').textContent, /Auto-corrected/);
+  assert.equal(card.shadowRoot.querySelector('.timeline img'), null);
+  assert.equal(card.shadowRoot.querySelector('.pet-rows').textContent, 'First1Second0Unidentified2');
+  assert.equal(reads[0][0], 'GET'); assert.match(reads[0][1], /^calendars\/calendar.petkit_history\?/);
+  assert.equal(calls.length, 0);
+});
+
+test('timeline failures are visible and stale date requests do not paint the wrong day', async () => {
+  const { card, hass } = setup();
+  card.setConfig({ entity: 'sensor.box_device_status', stats_entity: 'sensor.visits', calendar_entity: 'calendar.petkit_history' });
+  let finish;
+  hass.callApi = () => new Promise(resolve => { finish = resolve; }); card.hass = hass;
+  const first = card.loadHistory('2026-11-05');
+  hass.callApi = async () => { throw new Error('Calendar unavailable'); };
+  await card.loadHistory('2026-11-04');
+  assert.match(card.shadowRoot.querySelector('.timeline-status').textContent, /Calendar unavailable/);
+  finish([]); await first;
+  assert.equal(card.historyDate, '2026-11-04');
+  assert.match(card.shadowRoot.querySelector('.timeline-status').textContent, /Calendar unavailable/);
+});
