@@ -143,8 +143,10 @@ The visual editor accepts a switch entity and an optional display name.
 ![Plant Monitor alongside balcony devices](docs/images/plant-monitor-live.png)
 
 `custom:plant-monitor-card` uses the same half-width, single-row tile size as
-Washer and Power Strip, with a twin-probe silhouette and four readings in a compact
-two-by-two layout. Click the tile for moisture, conductivity, illuminance and
+Washer and Power Strip, with a twin-probe silhouette and four right-aligned readings
+grouped in a compact two-by-two layout. The group sits beside the title on wide tiles
+and moves below it on narrow tiles without reducing the reading font size.
+Click the tile for moisture, conductivity, illuminance and
 temperature details; each reading opens its native entity history.
 Missing readings show Unavailable; zero remains a valid reading. No services
 are called and no plant-health or care recommendations are inferred.

@@ -44,10 +44,26 @@ class PlantMonitorCard extends HTMLElement {
   }
   render() {
     this.shadowRoot.innerHTML = `<style>
-      :host{display:block;letter-spacing:0;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif)}*{box-sizing:border-box}button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;text-align:left}button:disabled{cursor:default;color:var(--secondary-text-color,#777)}button:focus-visible{outline:2px solid var(--primary-color,#03a9f4);outline-offset:-2px}
+      :host{display:block;container:plant-monitor / inline-size;letter-spacing:0;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif)}*{box-sizing:border-box}button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;text-align:left}button:disabled{cursor:default;color:var(--secondary-text-color,#777)}button:focus-visible{outline:2px solid var(--primary-color,#03a9f4);outline-offset:-2px}
       .entry{display:flex;align-items:center;gap:12px;width:100%;height:66px;padding:8px 12px;min-width:0;border:1px solid var(--ha-card-border-color,var(--divider-color,#ddd));border-radius:8px;background:var(--ha-card-background,var(--card-background-color,#fff));color:var(--primary-text-color,#222)}
-      .info{min-width:0;flex:1;container-type:inline-size}.device-art{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0;color:var(--state-icon-color,#999)}.device-art svg{width:24px;height:28px}.name{display:block;font-size:14px;line-height:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.readings{display:grid;grid-template-columns:max-content max-content;justify-content:space-between;column-gap:2px;margin-top:3px;color:var(--secondary-text-color,#777)}.tile-reading{display:flex;align-items:baseline;gap:2px;min-width:0;white-space:nowrap;line-height:13px}.tile-value{font-size:11px}.tile-unit{font-size:9px}
-      @container(max-width:80px){.tile-value{font-size:10px}.tile-unit{font-size:8px}.tile-reading{gap:1px}}
+      .info{min-width:0;flex:1;display:grid;grid-template-columns:minmax(0,1fr) max-content;align-items:center;column-gap:12px}
+      .device-art{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0;color:var(--state-icon-color,#999)}.device-art svg{width:24px;height:28px}
+      .name{display:block;font-size:14px;line-height:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .readings{display:grid;grid-template-columns:repeat(2,max-content);justify-content:end;column-gap:16px;color:var(--secondary-text-color,#777)}
+      .tile-reading{display:flex;align-items:baseline;justify-content:flex-end;gap:2px;min-width:0;white-space:nowrap;line-height:13px;font-variant-numeric:tabular-nums}.tile-value{font-size:11px}.tile-unit{font-size:9px}
+      @container plant-monitor (max-width:260px){
+        .info{grid-template-columns:minmax(0,1fr);row-gap:3px}
+        .readings{justify-content:start;column-gap:10px}
+      }
+      @container plant-monitor (max-width:180px){
+        .entry{gap:6px;padding-inline:7px}
+        .entry .device-art{width:22px}.entry .device-art svg{width:20px}
+      }
+      @container plant-monitor (max-width:125px){
+        .entry{padding-inline:6px}
+        .entry .device-art{display:none}
+        .readings{column-gap:4px}
+      }
       dialog{width:340px;max-width:calc(100vw - 32px);border:1px solid var(--divider-color,#ddd);border-radius:8px;padding:16px;background:var(--card-background-color,#fff);color:var(--primary-text-color,#222)}dialog::backdrop{background:#0006}header{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:16px}header .device-art{width:24px;height:28px}.close{margin-left:auto;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:var(--secondary-background-color,#eee)}.detail{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;font-size:14px;border-bottom:1px solid var(--divider-color,#eee)}.detail:last-child{border:0}.reading{text-align:right}
     </style><button class="entry identity" aria-haspopup="dialog"><span class="device-art">${art}</span><span class="info"><span class="name"></span><span class="readings"></span></span></button><dialog><header><span class="device-art">${art}</span><span class="title"></span><button class="close" aria-label="Close"><ha-icon icon="mdi:close"></ha-icon></button></header><div class="details"></div></dialog>`;
     const name = this.config.name || "Plant Monitor";
