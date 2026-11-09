@@ -90,6 +90,22 @@ try {
     assert.deepEqual(await page.evaluate(() => calls), []);
     await dialog.screenshot({ path: `test-results/petkit-${width}-${dark}.png` });
     if (width === 390 && !dark) await dialog.screenshot({ path: 'docs/images/petkit-litter-controls.png' });
+    await page.evaluate(() => {
+      hass.states['sensor.box_error'].state = 'Waste collection bin is full, please empty promptly';
+      hass.states['binary_sensor.box_wastebin_filled'].state = 'on'; card.hass = hass;
+    });
+    assert.equal(await card.locator('.summary.attention').textContent(), 'Waste bin full \u00b7 3 today');
+    assert.equal(await dialog.locator('.status.attention').innerText(), 'Waste bin full');
+    assert.equal(await dialog.locator('.waste-value').innerText(), 'Full');
+    assert.equal(await dialog.evaluate(n => n.scrollWidth <= n.clientWidth), true);
+    assert.equal(await dialog.getByRole('button', { name: 'Clean', exact: true }).isDisabled(), true);
+    await dialog.screenshot({ path: `test-results/petkit-attention-${width}-${dark}.png` });
+    await page.evaluate(() => {
+      hass.states['sensor.box_error'].state = 'No error';
+      hass.states['binary_sensor.box_wastebin_filled'].state = 'off'; card.hass = hass;
+    });
+    assert.equal(await card.locator('.entry').evaluate(n => n.getBoundingClientRect().height), 66);
+    assert.equal(await dialog.locator('.status').innerText(), 'Idle');
     await page.evaluate(() => { hass.states['binary_sensor.box_toilet_occupied'].state = 'on'; card.hass = hass; });
     assert.equal(await dialog.getByRole('button', { name: 'Clean', exact: true }).isDisabled(), true);
     assert.deepEqual(await page.evaluate(() => calls), []);

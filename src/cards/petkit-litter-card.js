@@ -13,6 +13,7 @@ const actions = [
   ['level', 'Level litter', 'mdi:format-horizontal-align-center'], ['pause', 'Pause', 'mdi:pause'], ['continue', 'Continue', 'mdi:play']
 ];
 const settings = [['auto_clean', 'Automatic cleaning'], ['child_lock', 'Child lock'], ['do_not_disturb', 'Do not disturb']];
+const clearFaultStates = ['no error', 'none', '0'];
 const art = '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5h20a6 6 0 0 1 6 6v23H4V11a6 6 0 0 1 6-6Z"/><rect x="8" y="11" width="18" height="19" rx="9"/><path d="M8 35v2m24-2v2M12 30h10"/><circle cx="31" cy="13" r="1"/></svg>';
 const label = value => String(value || '').replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());
 
@@ -56,6 +57,15 @@ class PetkitLitterCard extends HTMLElement {
   }
   state(key) { return this._hass?.states?.[key === 'status' ? this.config.entity : this.entity(key)]?.state; }
   online() { return /^online(?:_|$)/.test(this.state('status') || ''); }
+  attention() {
+    if (!this.online()) return [];
+    const fault = (this.state('fault') || '').trim();
+    const hasFault = fault && ![...clearFaultStates, 'unknown', 'unavailable'].includes(fault.toLowerCase());
+    const fullFault = hasFault && /\bwaste (?:collection )?bin (?:is )?full\b/i.test(fault);
+    const reasons = hasFault && !fullFault ? [fault] : [];
+    if (fullFault || this.state('waste') === 'on') reasons.push('Waste bin full');
+    return reasons;
+  }
   operation() {
     if (!this.online()) return {};
     const raw = this.state('state') || '';
@@ -73,7 +83,7 @@ class PetkitLitterCard extends HTMLElement {
     if (key === 'pause') return '';
     if (key === 'continue' && /(?:^|_)paused_/.test(this.state('state') || '')) return 'Device is paused for a safety condition';
     if (this.state('occupancy') !== 'off') return 'Occupancy is detected or unknown';
-    if (!['no error', 'none', '0'].includes((this.state('fault') || '').toLowerCase())) return 'Fault status is not clear';
+    if (!clearFaultStates.includes((this.state('fault') || '').toLowerCase())) return 'Fault status is not clear';
     if (['scoop', 'dump', 'level'].includes(key) && this.state('state') !== 'idle') return 'Device is not idle';
     if (!this.state('state') || ['unknown', 'unavailable'].includes(this.state('state'))) return 'Device state is unknown';
     return '';
@@ -264,14 +274,17 @@ class PetkitLitterCard extends HTMLElement {
       this.awaiting = null; clearTimeout(this.readbackTimer); this.feedback = 'Device state updated';
     }
     const status = this.online() ? label(raw || 'unknown') : label(this.state('status') || 'unavailable');
-    root.querySelectorAll('.status').forEach(node => { node.textContent = status; });
+    const reasons = this.attention(), detail = root.querySelector('.status'), summary = root.querySelector('.summary');
+    detail.textContent = reasons.length ? reasons.join(' \u00b7 ') : status;
+    for (const node of [detail, summary]) node.classList.toggle('attention', reasons.length > 0);
     const sourceVisits = todayVisits(this._hass?.states?.[this.config.stats_entity], this.now?.() || new Date());
     const archive = this.config.calendar_entity ? this.historyCache?.get(this.today()) : null;
     const visits = archive?.rows && !archive.error ? correctedVisits(sourceVisits, archive.rows) : sourceVisits;
     root.querySelector('.today-total').textContent = String(visits.total ?? '\u2014');
     const litter = this._hass?.states?.[this.entity('litter')];
     const numeric = s => s && s.state !== '' && !['unknown', 'unavailable'].includes(s.state) && Number.isFinite(Number(s.state));
-    root.querySelector('.summary').textContent = `${status} \u00b7 ${visits.total ?? '\u2014'} today`;
+    summary.textContent = `${reasons[0] || status} \u00b7 ${visits.total ?? '\u2014'} today`;
+    summary.title = reasons.join(' \u00b7 ');
     root.querySelector('.litter-value').textContent = numeric(litter) ? `${litter.state}${litter.attributes?.unit_of_measurement || '%'}` : '\u2014';
     const weight = this._hass?.states?.[this.entity('weight')];
     root.querySelector('.weight-value').textContent = numeric(weight) ? `${weight.state} ${weight.attributes?.unit_of_measurement || ''}`.trim() : '\u2014';
@@ -317,6 +330,7 @@ class PetkitLitterCard extends HTMLElement {
       :host{display:block;letter-spacing:0;color:var(--primary-text-color,#222);font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif)}*{box-sizing:border-box}button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}button:disabled{opacity:.45;cursor:default}button:focus-visible,input:focus-visible{outline:2px solid var(--primary-color,#03a9f4);outline-offset:2px}
       .entry{display:flex;align-items:center;gap:12px;width:100%;height:66px;min-width:0;padding:8px 12px;text-align:left;border:1px solid var(--ha-card-border-color,var(--divider-color,#ddd));border-radius:8px;background:var(--ha-card-background,var(--card-background-color,#fff))}.device-art{display:grid;place-items:center;flex:none;width:32px;height:32px;color:var(--state-icon-color,#999)}.device-art svg{width:24px;height:28px}.info{flex:1;min-width:0}.name{display:block;font-size:14px;line-height:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.summary{display:block;font-size:11px;line-height:13px;margin-top:3px;color:var(--secondary-text-color,#777);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       dialog{width:420px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow:auto;padding:20px;border:1px solid var(--divider-color,#ddd);border-radius:8px;background:var(--card-background-color,#fff);color:inherit;font-size:14px;line-height:20px}dialog::backdrop{background:#0006}header{display:flex;align-items:center;gap:10px}.heading{flex:1;min-width:0}.title{font-size:16px;line-height:22px;font-weight:500;overflow-wrap:anywhere}.status{font-size:12px;line-height:18px;color:var(--secondary-text-color,#777);margin-top:2px}.icon-button{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:50%;background:var(--secondary-background-color,#eee)}ha-icon{--mdc-icon-size:20px}
+      .summary.attention,.status.attention{color:var(--warning-color,#b36b00);color:color-mix(in srgb,var(--warning-color,#b36b00) 60%,var(--primary-text-color,#222));font-weight:500}.status.attention{overflow-wrap:anywhere}
       .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:20px 0 16px;border-bottom:1px solid var(--divider-color,#ddd)}
       .metric{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;min-width:0;text-align:left;padding:0}
       .metric-label{display:block;font-size:12px;line-height:18px;color:var(--secondary-text-color,#777)}
