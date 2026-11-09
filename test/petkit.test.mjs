@@ -46,9 +46,10 @@ test('waste bin alerts appear on the card and in details without duplicating the
   const summary = root.querySelector('.summary'), detail = root.querySelector('.status');
   const fault = hass.states['sensor.box_error'];
   add('binary_sensor.box_wastebin_filled', 'on'); card.hass = hass;
-  assert.equal(summary.textContent, 'Waste bin full \u00b7 3 today');
+  assert.equal(summary.textContent, 'Waste bin full \u00b7 3 Visits');
   assert.equal(detail.textContent, 'Waste bin full');
-  assert.ok(summary.classList.contains('attention') && detail.classList.contains('attention'));
+  assert.equal(summary.querySelector('.attention').textContent, 'Waste bin full');
+  assert.ok(!summary.classList.contains('attention') && detail.classList.contains('attention'));
   assert.equal(root.querySelector('.waste-value').textContent, 'Full');
 
   fault.state = 'Waste collection bin is full, please empty promptly'; card.hass = hass;
@@ -57,9 +58,9 @@ test('waste bin alerts appear on the card and in details without duplicating the
   assert.equal(detail.textContent, 'Waste bin full');
 
   fault.state = 'No error'; card.hass = hass;
-  assert.equal(summary.textContent, 'Idle \u00b7 3 today');
+  assert.equal(summary.textContent, 'Idle \u00b7 3 Visits');
   assert.equal(detail.textContent, 'Idle');
-  assert.ok(!summary.classList.contains('attention') && !detail.classList.contains('attention'));
+  assert.ok(!summary.querySelector('.attention') && !detail.classList.contains('attention'));
   assert.equal(calls.length, 0);
 });
 
@@ -71,7 +72,7 @@ test('device faults surface their reason but missing and stale offline values do
   fault.state = 'unavailable'; card.hass = hass;
   assert.equal(detail.textContent, 'Idle');
   fault.state = 'Motor fault'; add('binary_sensor.box_wastebin_filled', 'on'); card.hass = hass;
-  assert.equal(summary.textContent, 'Motor fault \u00b7 3 today');
+  assert.equal(summary.textContent, 'Motor fault \u00b7 3 Visits');
   assert.equal(detail.textContent, 'Motor fault \u00b7 Waste bin full');
   assert.equal(root.querySelector('[data-action="scoop"]').disabled, true);
   hass.states['sensor.box_device_status'].state = 'offline'; card.hass = hass;

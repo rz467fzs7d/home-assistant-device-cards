@@ -94,7 +94,13 @@ try {
       hass.states['sensor.box_error'].state = 'Waste collection bin is full, please empty promptly';
       hass.states['binary_sensor.box_wastebin_filled'].state = 'on'; card.hass = hass;
     });
-    assert.equal(await card.locator('.summary.attention').textContent(), 'Waste bin full \u00b7 3 today');
+    const summary = card.locator('.summary');
+    assert.equal(await summary.textContent(), 'Waste bin full \u00b7 3 Visits');
+    assert.deepEqual(await summary.evaluate(node => {
+      const warning = node.querySelector('.attention'), count = node.querySelector('.summary-visits');
+      const color = element => getComputedStyle(element).color;
+      return [warning.textContent, count.textContent, color(warning) !== color(node), color(count) === color(node)];
+    }), ['Waste bin full', '3 Visits', true, true]);
     assert.equal(await dialog.locator('.status.attention').innerText(), 'Waste bin full');
     assert.equal(await dialog.locator('.waste-value').innerText(), 'Full');
     assert.equal(await dialog.evaluate(n => n.scrollWidth <= n.clientWidth), true);
