@@ -5,8 +5,7 @@ One frontend library, independently configurable cards, no backend integration.
 
 ![Power strip, stereo and home theater card overview](docs/images/cards-overview.png)
 
-Overview and appliance screenshots use synthetic demo entities and states.
-The Plant Monitor screenshot below shows live Home Assistant readings.
+Screenshots use synthetic demo entities and states.
 
 ## Cards
 
@@ -140,8 +139,6 @@ The visual editor accepts a switch entity and an optional display name.
 
 ### Plant Monitor
 
-![Plant Monitor alongside balcony devices](docs/images/plant-monitor-live.png)
-
 `custom:plant-monitor-card` uses the same half-width, single-row tile size as
 Washer and Power Strip, with a twin-probe silhouette and four right-aligned readings
 grouped in a compact two-by-two layout. The group sits beside the title on wide tiles
@@ -150,6 +147,14 @@ Click the tile for moisture, conductivity, illuminance and
 temperature details; each reading opens its native entity history.
 Missing readings show Unavailable; zero remains a valid reading. No services
 are called and no plant-health or care recommendations are inferred.
+
+**Wide tile**
+
+![Plant Monitor with two columns of readings to the right of the title](docs/images/plant-monitor-wide.png)
+
+**Narrow tile**
+
+![Plant Monitor with the same two columns of readings below the title](docs/images/plant-monitor-narrow.png)
 
 ```yaml
 type: custom:plant-monitor-card
@@ -161,7 +166,8 @@ temperature_entity: sensor.plant_temperature
 ```
 
 Bind at least one sensor. Units come from each entity, and the visual editor
-provides four independent sensor selectors.
+provides four independent sensor selectors. The layout adapts to the tile width
+automatically; no custom styles are needed.
 
 ### Dishwasher
 
