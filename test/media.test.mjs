@@ -63,6 +63,30 @@ test("validates channels and entities; theater supports four speakers", () => {
   assert.throws(() => theater.setConfig({ entity: "media_player.x", speakers: ["media_player.a", "media_player.a"] }), /unique/);
   assert.doesNotThrow(() => setup("general-speaker-stereo-card", { speakers: [] }));
 });
+test("theater can show a large and a mini pair without changing playback targets", () => {
+  const speakers = ["a", "b", "c", "d"].map(id => `media_player.${id}`);
+  const speaker_models = ["homepod", "homepod", "mini", "mini"];
+  const { card } = setup("apple-theater-card", { speakers, speaker_models });
+  const models = selector => [...card.shadowRoot.querySelectorAll(selector)].map(node => node.dataset.model);
+  assert.deepEqual(models(".tile .pair i"), speaker_models);
+  assert.deepEqual(models(".speaker-art"), speaker_models);
+  assert.equal(card.playbackId, "media_player.main");
+  assert.throws(() => card.setConfig({ ...card.config, speaker_models: ["mini"] }), /speaker_models/);
+  assert.throws(() => card.setConfig({ ...card.config, speaker_models: ["large", "large", "mini", "mini"] }), /speaker_models/);
+});
+test("ordinary speakers with Apple TV have their own icon and device details", () => {
+  const { card } = setup("general-speaker-stereo-card", {
+    speakers: [], icon_variant: "apple-tv", television: "media_player.projector"
+  });
+  const icon = card.shadowRoot.querySelector(".tile .theater");
+  assert.equal(icon.querySelectorAll('i[data-model="speaker"]').length, 2);
+  assert.ok(icon.querySelector(".apple-tv-icon"));
+  const targets = [];
+  card.addEventListener("hass-more-info", event => targets.push(event.detail.entityId));
+  card.shadowRoot.querySelector('.details [aria-label="Apple TV"]').click();
+  card.shadowRoot.querySelector('.details [aria-label="Television"]').click();
+  assert.deepEqual(targets, ["media_player.main", "media_player.projector"]);
+});
 test("editor exposes filtered entity selectors and theater layout", () => {
   const { window, card } = setup("apple-theater-card");
   const editor = card.constructor.getConfigElement();

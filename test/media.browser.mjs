@@ -20,7 +20,9 @@ try {
         ["general-speaker-stereo-card", "homepod", 2]
       ]) {
         const card = document.createElement(type);
-        card.setConfig({ entity: "media_player.main", model, speakers: Array.from({ length: count }, (_, i) => `media_player.speaker_${i}`) });
+        card.setConfig({ entity: "media_player.main", model, speakers: Array.from({ length: count }, (_, i) => `media_player.speaker_${i}`),
+          ...(type === "apple-theater-card" ? { speaker_models: ["homepod", "homepod", "mini", "mini"] } : {}),
+          ...(type === "general-speaker-stereo-card" ? { icon_variant: "apple-tv" } : {}) });
         card.hass = { states: {
           "media_player.main": { state: "playing", attributes: { supported_features: 16445, media_title: "A song with a very long title that must fit the card", volume_level: .2 } },
           ...Object.fromEntries(Array.from({ length: count }, (_, i) => [`media_player.speaker_${i}`, { state: "playing" }]))
@@ -43,6 +45,14 @@ try {
           getComputedStyle(left).opacity === getComputedStyle(right).opacity;
       }));
     assert.ok(symmetric, "left/right artwork must have equal size, height, opacity and symmetric offsets");
+    const mixed = page.locator("apple-theater-card .tile .pair");
+    const big = await mixed.locator('i[data-model="homepod"]').first().boundingBox();
+    const small = await mixed.locator('i[data-model="mini"]').first().boundingBox();
+    assert.ok(big.width > small.width && big.height > small.height && small.y > big.y);
+    assert.equal(await mixed.locator(".apple-tv-icon").count(), 1);
+    const bookshelf = page.locator("general-speaker-stereo-card .tile .pair");
+    assert.equal(await bookshelf.locator('i[data-model="speaker"]').count(), 2);
+    assert.equal(await bookshelf.locator(".apple-tv-icon").count(), 1);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "page must not overflow");
     await page.locator("apple-theater-card .entry").click();
     const colors = await page.evaluate(() => {
@@ -77,7 +87,8 @@ try {
     for (const model of ["homepod", "mini"]) {
       await page.evaluate(model => {
         const card = document.querySelector("apple-theater-card");
-        card.setConfig({ ...card.config, model, speakers: ["media_player.speaker_0", "media_player.speaker_1"] });
+        card.setConfig({ ...card.config, model, speaker_models: null,
+          speakers: ["media_player.speaker_0", "media_player.speaker_1"] });
       }, model);
       assert.equal(await page.locator("apple-theater-card .tile .theater i").count(), 2);
       assert.equal(await page.locator("apple-theater-card .tile .theater-box .apple-tv-icon").count(), 1);

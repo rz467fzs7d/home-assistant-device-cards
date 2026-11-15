@@ -19,6 +19,11 @@ Dashboard cards for devices already connected to Home Assistant.
 | [PETKIT litter boxes](docs/guide.md#petkit-litter-box) | `custom:petkit-litter-card` |
 | [AdGuard Home](docs/guide.md#adguard-home) | `custom:adguard-card` |
 
+For a theater with mixed HomePods, set `speaker_models` in the same order as
+`speakers`, for example `[homepod, homepod, mini, mini]`. For Apple TV with a
+Sonos or other stereo player, use `custom:general-speaker-stereo-card` with
+`icon_variant: apple-tv` and the Apple TV as the primary entity.
+
 ## Install with HACS
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=rz467fzs7d&repository=home-assistant-device-cards&category=plugin)

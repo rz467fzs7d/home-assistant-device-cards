@@ -1,6 +1,7 @@
 import homepod from "../assets/homepod.svg";
 import mini from "../assets/homepod-mini.svg";
 import appleTv from "../assets/apple-tv.svg";
+import bookshelf from "../assets/bookshelf-speaker.svg";
 
 const FEATURES = { media_pause: 1, volume_set: 4, volume_mute: 8,
   media_previous_track: 16, media_next_track: 32, media_play: 16384 };
@@ -50,6 +51,14 @@ class SpeakerCard extends HTMLElement {
       if (config[key] && !mediaEntity(config[key])) throw new Error(`${key} must be a media_player entity`);
     }
     if (config.model && !["homepod", "mini"].includes(config.model)) throw new Error("model must be homepod or mini");
+    if (config.speaker_models != null && (type !== "apple-theater-card" ||
+      !Array.isArray(config.speaker_models) || config.speaker_models.length !== speakers.length ||
+      config.speaker_models.some(model => !["homepod", "mini"].includes(model)))) {
+      throw new Error("speaker_models must match the Apple Theater speakers and use homepod or mini");
+    }
+    if (config.icon_variant != null && (type !== "general-speaker-stereo-card" || config.icon_variant !== "apple-tv")) {
+      throw new Error("icon_variant apple-tv is only supported by Speaker Stereo");
+    }
     this.config = { ...config, type: `custom:${type}`, name: config.name || TYPES[type], speakers };
     this._playbackId = config.entity;
     this.pending = false;
@@ -89,15 +98,24 @@ class SpeakerCard extends HTMLElement {
     this.shadowRoot.querySelector("dialog").close();
     this.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId: entity }, bubbles: true, composed: true }));
   }
+  get isTheater() {
+    return this.constructor.cardType === "apple-theater-card" || this.config.icon_variant === "apple-tv";
+  }
+  speakerModel(index) {
+    return this.constructor.cardType === "general-speaker-stereo-card"
+      ? "speaker" : this.config.speaker_models?.[index] || this.config.model || "homepod";
+  }
   iconMarkup() {
-    const type = this.constructor.cardType;
-    if (type === "general-speaker-stereo-card") return '<ha-icon icon="mdi:speaker-multiple"></ha-icon>';
-    return `<span class="pair ${type === "apple-theater-card" ? `theater slots-${this.config.speakers.length} model-${this.config.model}` : ""}" aria-hidden="true">
-      ${type === "apple-theater-card" ? '<span class="theater-box"><span class="apple-tv-icon"></span></span>' : ""}
-      <i></i><i></i>${this.config.speakers.length === 4 ? "<i></i><i></i>" : ""}</span>`;
+    const general = this.constructor.cardType === "general-speaker-stereo-card";
+    if (general && !this.isTheater) return '<ha-icon icon="mdi:speaker-multiple"></ha-icon>';
+    const models = Array.from({ length: general ? 2 : this.config.speakers.length }, (_, index) => this.speakerModel(index));
+    const mixed = new Set(models).size > 1;
+    return `<span class="pair${this.isTheater ? ` theater slots-${models.length}` : ""}${mixed ? " mixed" : ""}${general ? " bookshelf" : ""}" aria-hidden="true">
+      ${this.isTheater ? '<span class="theater-box"><span class="apple-tv-icon"></span></span>' : ""}
+      ${models.map(model => `<i data-model="${model}"></i>`).join("")}</span>`;
   }
   render() {
-    const icon = `data:image/svg+xml,${encodeURIComponent(this.config.model === "mini" ? mini : homepod)}`;
+    const mask = svg => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
     const appleTvIcon = `data:image/svg+xml,${encodeURIComponent(appleTv)}`;
     this.shadowRoot.innerHTML = `<style>
       :host{display:block;min-width:0;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);color:var(--primary-text-color)}
@@ -108,15 +126,25 @@ class SpeakerCard extends HTMLElement {
       .art{width:36px;height:36px;flex:none;color:var(--state-media_player-inactive-color,var(--state-inactive-color,var(--secondary-text-color)));display:grid;place-items:center}
       .art.active{color:var(--state-media_player-active-color,var(--state-active-color,var(--primary-color)))}
       .art>ha-icon{--mdc-icon-size:28px}.pair{display:block;width:32px;height:32px;position:relative}
-      .pair i{position:absolute;width:14px;height:24px;background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
+      [data-model="homepod"]{--speaker-mask:${mask(homepod)}}
+      [data-model="mini"]{--speaker-mask:${mask(mini)}}
+      [data-model="speaker"]{--speaker-mask:${mask(bookshelf)}}
+      .pair i,.speaker-art[data-model]{background:currentColor;mask:var(--speaker-mask) center/contain no-repeat}
+      .pair i{position:absolute;width:14px;height:24px}
       .pair i:first-of-type{left:0;top:4px}.pair i:nth-of-type(2){right:0;top:4px}
       .theater i{width:16px;height:22px;opacity:.65}
       .theater i:first-of-type{top:0;left:-2px}.theater i:nth-of-type(2){top:0;right:-2px}
       .theater i:nth-of-type(3){top:10px;left:-2px}.theater i:nth-of-type(4){top:10px;right:-2px}
       .theater.slots-2 i{top:10px}
       .theater.slots-2 i:first-of-type{left:-5px}.theater.slots-2 i:nth-of-type(2){right:-5px}
+      .theater.mixed i[data-model="homepod"]{width:15px;height:18px}
+      .theater.mixed i[data-model="mini"]{width:12px;height:12px}
+      .theater.mixed i:nth-of-type(3),.theater.mixed i:nth-of-type(4){top:18px}
       .theater-box{position:absolute;z-index:1;left:6px;top:12px;width:20px;height:20px;border-radius:5px;background:currentColor;box-shadow:0 0 0 1.5px var(--ha-card-background,var(--card-background-color,#fff));display:grid;place-items:center}
       .theater-box .apple-tv-icon{width:17px;height:17px;background:var(--ha-card-background,var(--card-background-color,#fff))}
+      .theater.mixed .theater-box,.theater.bookshelf .theater-box{left:8px;top:14px;width:16px;height:16px;border-radius:4px}
+      .theater.mixed .apple-tv-icon,.theater.bookshelf .apple-tv-icon{width:14px;height:14px}
+      .theater.bookshelf i{width:12px;height:20px;top:12px}
       .text{min-width:0}.name{font-size:14px;font-weight:500}.summary,.media{font-size:12px;color:var(--secondary-text-color);margin-top:3px}
       .text>*{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.text .media:empty{display:none}
       .tile .media:not(:empty)+.summary{display:none}
@@ -132,7 +160,6 @@ class SpeakerCard extends HTMLElement {
       .speakers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border-top:1px solid var(--divider-color,#ddd);padding-top:16px}
       .speaker{border:0;background:none;text-align:center;padding:14px 4px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}.speaker span{display:block;font-size:13px;overflow-wrap:anywhere}.speaker small{display:block;color:var(--secondary-text-color)}
       .speaker-art{display:block;width:40px;height:40px;margin-bottom:4px;color:var(--state-media_player-inactive-color,var(--state-inactive-color,var(--secondary-text-color)))}
-      .speaker-art.homepod{background:currentColor;mask:url("${icon}") center/contain no-repeat;-webkit-mask:url("${icon}") center/contain no-repeat}
       .speaker-art ha-icon{--mdc-icon-size:40px}.speaker.active .speaker-art{color:var(--state-media_player-active-color,var(--state-active-color,var(--primary-color)))}.speaker.unavailable .speaker-art{color:var(--state-unavailable-color,var(--secondary-text-color));opacity:.4}
       .unavailable small{color:var(--error-color,#db4437)}.error{color:var(--error-color,#db4437);font-size:13px;overflow-wrap:anywhere}.error:empty{display:none}
       .details{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}[hidden]{display:none!important}
@@ -172,15 +199,15 @@ class SpeakerCard extends HTMLElement {
     this.config.speakers.forEach((id, index) => {
       const button = document.createElement("button");
       button.className = "speaker";
-      button.innerHTML = this.constructor.cardType === "general-speaker-stereo-card"
+      button.innerHTML = this.constructor.cardType === "general-speaker-stereo-card" && !this.isTheater
         ? '<i class="speaker-art" aria-hidden="true"><ha-icon icon="mdi:speaker"></ha-icon></i><span></span><small></small>'
-        : '<i class="speaker-art homepod" aria-hidden="true"></i><span></span><small></small>';
+        : `<i class="speaker-art" data-model="${this.speakerModel(index)}" aria-hidden="true"></i><span></span><small></small>`;
       button.querySelector("span").textContent = positions[index];
       button.title = id;
       button.onclick = () => this.moreInfo(id);
       root.querySelector(".speakers").append(button);
     });
-    const theater = this.constructor.cardType === "apple-theater-card";
+    const theater = this.isTheater;
     for (const [id, label, iconName] of [[this.config.entity, theater ? "Apple TV" : "Player Details", theater ? "apple-tv" : "mdi:information-outline"], [this.config.television, "Television", "mdi:television"]]) {
       if (!id) continue;
       const button = document.createElement("button");

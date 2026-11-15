@@ -53,14 +53,20 @@ class SpeakerEditor extends HTMLElement {
     root.append(playback);
     const theater = this.config.type === "custom:apple-theater-card";
     const general = this.config.type === "custom:general-speaker-stereo-card";
+    const models = [["homepod", "HomePod"], ["mini", "HomePod mini"]];
+    if (general) root.append(this.selectField("Icon", "icon_variant",
+      [["", "Stereo speakers"], ["apple-tv", "Stereo speakers + Apple TV"]], this.config.icon_variant || "",
+      icon_variant => { this.emit({ icon_variant: icon_variant || null }); this.render(); }));
     if (!general) root.append(this.selectField("Speaker model", "model",
-      [["homepod", "HomePod"], ["mini", "HomePod mini"]], this.config.model || "homepod",
-      model => this.emit({ model })));
+      models, this.config.model || "homepod",
+      model => { this.emit({ model, speaker_models: null }); this.render(); }));
     if (theater || general) {
       root.append(this.selectField("Speaker layout", "layout",
         theater ? [["2", "Stereo pair"], ["4", "Front and rear pairs"]] : [["0", "Single stereo entity"], ["2", "Left and right entities"]],
         String(this.config.speakers.length || (theater ? 2 : 0)), value => {
           this.emit({ speakers: Array.from({ length: Number(value) }, (_, i) => this.config.speakers[i] || ""),
+            ...(this.config.speaker_models ? { speaker_models: Array.from({ length: Number(value) }, (_, i) =>
+              this.config.speaker_models[i] || this.config.model || "homepod") } : {}),
             ...(this.config.speaker_state_entities ? { speaker_state_entities: Array.from({ length: Number(value) }, (_, i) => this.config.speaker_state_entities[i] || "") } : {}) });
           this.render();
         }));
@@ -77,9 +83,18 @@ class SpeakerEditor extends HTMLElement {
         const entities = Array.from({ length: count }, (_, j) => this.config.speaker_state_entities?.[j] || "");
         entities[i] = value; this.emit({ speaker_state_entities: entities });
       }));
+      if (theater && count === 4) channels.append(this.selectField(`${positions[i]} speaker model`, `speaker_model_${i}`,
+        models, this.config.speaker_models?.[i] || this.config.model || "homepod", value => {
+          const speaker_models = Array.from({ length: count }, (_, index) =>
+            this.config.speaker_models?.[index] || this.config.model || "homepod");
+          speaker_models[i] = value;
+          this.emit({ speaker_models });
+        }));
     }
     root.append(channels);
-    if (theater) root.append(this.entityField("Television (optional)", this.config.television, value => this.emit({ television: value })));
+    if (theater || this.config.icon_variant === "apple-tv") {
+      root.append(this.entityField("Television or projector (optional)", this.config.television, value => this.emit({ television: value })));
+    }
   }
 }
 if (!customElements.get("speaker-card-editor")) customElements.define("speaker-card-editor", SpeakerEditor);
