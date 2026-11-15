@@ -29,10 +29,13 @@ try {
         }, callService: async (...args) => window.calls.push(args) };
         document.querySelector("main").append(card);
       }
+      const single = document.createElement("general-speaker-stereo-card");
+      single.setConfig({ entity: "media_player.main", name: "HomePod mini L", icon_variant: "homepod-mini" });
+      document.querySelector("main").append(single);
     });
     await page.screenshot({ path: `test-results/media-${width}.png` });
     const symmetric = await page.evaluate(() => [...document.querySelector("main").children]
-      .filter(card => card.shadowRoot.querySelector(".pair"))
+      .filter(card => card.shadowRoot.querySelector(".pair:not(.single)"))
       .every(card => {
         const pair = card.shadowRoot.querySelector(".pair");
         const [left, right] = pair.querySelectorAll("i");
@@ -50,9 +53,14 @@ try {
     const small = await mixed.locator('i[data-model="mini"]').first().boundingBox();
     assert.ok(big.width > small.width && big.height > small.height && small.y > big.y);
     assert.equal(await mixed.locator(".apple-tv-icon").count(), 1);
-    const bookshelf = page.locator("general-speaker-stereo-card .tile .pair");
+    const bookshelf = page.locator("general-speaker-stereo-card .tile .bookshelf");
     assert.equal(await bookshelf.locator('i[data-model="speaker"]').count(), 2);
     assert.equal(await bookshelf.locator(".apple-tv-icon").count(), 1);
+    const singleIcon = page.locator("general-speaker-stereo-card .tile .single");
+    const shell = await singleIcon.boundingBox();
+    const speaker = await singleIcon.locator('i[data-model="mini"]').boundingBox();
+    assert.equal(await singleIcon.locator("i").count(), 1);
+    assert.equal(speaker.x + speaker.width / 2, shell.x + shell.width / 2);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "page must not overflow");
     await page.locator("apple-theater-card .entry").click();
     const colors = await page.evaluate(() => {

@@ -87,6 +87,22 @@ test("ordinary speakers with Apple TV have their own icon and device details", (
   card.shadowRoot.querySelector('.details [aria-label="Television"]').click();
   assert.deepEqual(targets, ["media_player.main", "media_player.projector"]);
 });
+test("standalone HomePod mini shows one speaker and follows its own playback source", async () => {
+  const { card, calls } = setup("general-speaker-stereo-card", {
+    name: "HomePod mini L", speakers: [], icon_variant: "homepod-mini",
+    playback_entities: ["media_player.ma_mini"]
+  });
+  const icon = card.shadowRoot.querySelector(".tile .pair");
+  assert.equal(icon.querySelectorAll("i").length, 1);
+  assert.equal(icon.querySelector("i").dataset.model, "mini");
+  assert.equal(icon.querySelector(".apple-tv-icon"), null);
+  assert.equal(card.shadowRoot.querySelectorAll(".speaker").length, 0);
+  card._hass.states["media_player.main"].state = "idle";
+  card._hass.states["media_player.ma_mini"] = { state: "playing", attributes: { supported_features: 1 } };
+  card.update();
+  await card.command("media_pause");
+  assert.equal(calls[0][2].entity_id, "media_player.ma_mini");
+});
 test("editor exposes filtered entity selectors and theater layout", () => {
   const { window, card } = setup("apple-theater-card");
   const editor = card.constructor.getConfigElement();

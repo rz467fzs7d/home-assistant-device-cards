@@ -55,7 +55,8 @@ class SpeakerEditor extends HTMLElement {
     const general = this.config.type === "custom:general-speaker-stereo-card";
     const models = [["homepod", "HomePod"], ["mini", "HomePod mini"]];
     if (general) root.append(this.selectField("Icon", "icon_variant",
-      [["", "Stereo speakers"], ["apple-tv", "Stereo speakers + Apple TV"]], this.config.icon_variant || "",
+      [["", "Stereo speakers"], ["apple-tv", "Stereo speakers + Apple TV"], ["homepod-mini", "Single HomePod mini"]],
+      this.config.icon_variant || "",
       icon_variant => { this.emit({ icon_variant: icon_variant || null }); this.render(); }));
     if (!general) root.append(this.selectField("Speaker model", "model",
       models, this.config.model || "homepod",

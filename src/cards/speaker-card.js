@@ -56,8 +56,9 @@ class SpeakerCard extends HTMLElement {
       config.speaker_models.some(model => !["homepod", "mini"].includes(model)))) {
       throw new Error("speaker_models must match the Apple Theater speakers and use homepod or mini");
     }
-    if (config.icon_variant != null && (type !== "general-speaker-stereo-card" || config.icon_variant !== "apple-tv")) {
-      throw new Error("icon_variant apple-tv is only supported by Speaker Stereo");
+    if (config.icon_variant != null && (type !== "general-speaker-stereo-card" ||
+      !["apple-tv", "homepod-mini"].includes(config.icon_variant))) {
+      throw new Error("icon_variant must be apple-tv or homepod-mini on Speaker Stereo");
     }
     this.config = { ...config, type: `custom:${type}`, name: config.name || TYPES[type], speakers };
     this._playbackId = config.entity;
@@ -107,6 +108,9 @@ class SpeakerCard extends HTMLElement {
   }
   iconMarkup() {
     const general = this.constructor.cardType === "general-speaker-stereo-card";
+    if (this.config.icon_variant === "homepod-mini") {
+      return '<span class="pair single" aria-hidden="true"><i data-model="mini"></i></span>';
+    }
     if (general && !this.isTheater) return '<ha-icon icon="mdi:speaker-multiple"></ha-icon>';
     const models = Array.from({ length: general ? 2 : this.config.speakers.length }, (_, index) => this.speakerModel(index));
     const mixed = new Set(models).size > 1;
@@ -132,6 +136,7 @@ class SpeakerCard extends HTMLElement {
       .pair i,.speaker-art[data-model]{background:currentColor;mask:var(--speaker-mask) center/contain no-repeat}
       .pair i{position:absolute;width:14px;height:24px}
       .pair i:first-of-type{left:0;top:4px}.pair i:nth-of-type(2){right:0;top:4px}
+      .pair.single i{left:4px;top:4px;width:24px;height:24px}
       .theater i{width:16px;height:22px;opacity:.65}
       .theater i:first-of-type{top:0;left:-2px}.theater i:nth-of-type(2){top:0;right:-2px}
       .theater i:nth-of-type(3){top:10px;left:-2px}.theater i:nth-of-type(4){top:10px;right:-2px}
